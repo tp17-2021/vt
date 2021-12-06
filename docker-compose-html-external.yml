@@ -27,4 +27,14 @@ services:
     volumes:
       #volume mount:"Host OS path:Path in the container"
       - ./web/conf.d:/etc/nginx/conf.d
+      - ./frontend/public:/usr/share/nginx/html
       # - "C:/Users/neviem/tvoja/cesta/k/html/suborom:/usr/share/nginx/html"
+
+  frontend-builder:
+    container_name: frontend-builder
+    build:
+      context: ./frontend
+      dockerfile: ./hot.dockerfile
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/app
