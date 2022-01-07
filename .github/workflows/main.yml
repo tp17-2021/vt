@@ -1,0 +1,44 @@
+name: VT Stage
+
+on:
+  pull_request:
+    branches: [ master ]
+    types: [closed]
+
+  push:
+    branches: [ development ]
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: self-hosted
+    
+    steps:
+      - name: Check current user
+        run: whoami
+
+      - name: Check out code
+        uses: actions/checkout@v1
+
+      - name: Checkout dev
+        run: git checkout development
+
+      - name: Checkout submodules
+        run: |
+          git submodule init
+          git pull --recurse-submodules
+          cd frontend
+          git checkout development
+          git pull
+          cd ..
+          cd backend
+          git checkout development
+          git pull
+          cd ..
+
+      - name: List
+        run: ls -lah
+
+      - name: Docker-Compose
+        run: docker-compose -f docker-compose-stage.yml up -d --build
