@@ -1,0 +1,35 @@
+{
+  "type": "presidential",
+  "title": "VOĽBY PREZIDENTA 2024",
+  "subtitle": "Voľba prezidenta Slovenskej republiky x.x.2024",
+  "candidates": [
+    {
+      "id": 1,
+      "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/B%C3%A9la_Bug%C3%A1r.jpg/1200px-B%C3%A9la_Bug%C3%A1r.jpg",
+      "name": "Béla Bugár",
+      "degree": "Ing",
+      "age": 62,
+      "profession": "poslanec národnej rady SR",
+      "city": "Šamorín"
+    },
+    {
+      "id": 2,
+      "img": "https://cloudia.hnonline.sk/r1200x/7c22b95e-cbdf-4149-9b72-199f31f9c936",
+      "name": "Zuzana Čaputová",
+      "degree": "JUDr.",
+      "age": 48,
+      "profession": "Právnička",
+      "city": "Pezinok"
+    },
+    {
+      "id": 3,
+      "img": "https://pbs.twimg.com/profile_images/1036671257431957505/aAEC2ETo_400x400.jpg",
+      "name": "Štefan Harabín",
+      "degree": "JUDr.",
+      "age": 61,
+      "profession": "Sudca",
+      "city": "Bratislava"
+    }
+  ]
+}
+
