@@ -1,0 +1,6 @@
+pytest
+pytest-mock
+requests-async
+httpx==0.7.*
+requests-mock
+pytest-asyncio
