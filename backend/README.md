@@ -2,9 +2,16 @@
 This repository contains whole backend for voting application. Beckend is managing service with printer and sending data to gateway.
 
 
-docker build -t newbackendik .
+Run
+```
+docker-compose up -d --build
+```
 
-docker run -p 8079:80 newbackendik
+from theroot `vt/` directory. Default port from host is `81`. Visit thi url to see backend fastapi docs
+
+```
+http://localhost:81/backend/docs
+```
 
 
 
