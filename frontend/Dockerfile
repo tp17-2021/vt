@@ -3,13 +3,14 @@ FROM node:12 AS build
 
 WORKDIR /app
 
-COPY package.json ./
-COPY package-lock.json ./
+COPY frontend/package.json ./
+COPY frontend/package-lock.json ./
 RUN npm install
 
-COPY . ./
+COPY frontend/ ./
 RUN npm run build
 
 # copy static files to nginx server and use this image for deployment
 FROM nginx:1.19-alpine
 COPY --from=build /app/public /usr/share/nginx/html
+COPY web/conf.d /etc/nginx/conf.d

@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+  vt-backend:
+    build:
+      context: ./backend
+      dockerfile: ./Dockerfile
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    environment: 
+      - ROOT_PATH=/backend
+
+  vt:
+    image: nginx:alpine
+    depends_on:
+      - vt-backend
+    ports:
+      - "81:80"
+    volumes:
+      - ./frontend/public:/usr/share/nginx/html
+
+  frontend-builder:
+    build:
+      context: ./frontend
+      dockerfile: ./hot.dockerfile
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/app

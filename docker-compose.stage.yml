@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  vt-backend:
+    build:
+      context: ./backend
+      dockerfile: ./Dockerfile
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    environment: 
+      - ROOT_PATH=/vt/backend
+      - VOTING_SERVICE_PATH=host.docker.internal:8101/voting-service-api
+
+  vt:
+    build:
+      context: ./
+      dockerfile: ./frontend/Dockerfile
+    depends_on:
+      - vt-backend
+    ports:
+      - "8100:80"
