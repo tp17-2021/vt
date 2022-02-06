@@ -72,18 +72,16 @@ async def receive_config_from_gateway (config: dict) -> None:
 
     await send_election_config_to_client(election_config)
 
-async def send_election_config_to_client (config: dict) -> None:
+@app.get('/api/election/config')
+async def get_config() -> None:
     """
     Method for sending election config to client
-
-    Keyword arguments:
-    config -- election config
 
     """
 
     app.sio.emit(
         'config', {
-            "config": config
+            "config": election_config
         }
     )
 
