@@ -183,10 +183,11 @@ async def send_vote_to_gateway (vote: dict, status_code=200) -> None:
         json = {'token': token, 'vote': vote}
     )
 
-    return r
+    r.raise_for_status()
 
-@app.post('/api/vote_generated', status_code=status.HTTP_204_NO_CONTENT)
-async def vote (vote: dict = Body(..., embed=True)) -> None:
+
+@app.post('/api/vote_generated', status_code=200)
+async def vote (vote: dict) -> None:
     """
     Api method for recieving vote from client
 
@@ -196,8 +197,6 @@ async def vote (vote: dict = Body(..., embed=True)) -> None:
     """
 
     r = await send_vote_to_gateway(vote)
-
-    return r
 
 
 ### This is for future usage, please keep it here, in final code, this won't be here :)
@@ -214,9 +213,4 @@ async def test_token_invalid():
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=80)
-
-
-
-
-
 
