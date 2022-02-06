@@ -128,11 +128,11 @@ async def send_token_to_gateway (token: str) -> None:
     """
 
     r = requests.post(
-        "http://" + so.environ['VOTING_SERVICE_PATH'] + "/api/token-validity",
+        "http://" + os.environ['VOTING_SERVICE_PATH'] + "/api/token-validity",
         json = {'token': token}
     )
 
-    if r.status_code == 204:
+    if r.status_code == 200:
         await send_validated_token_to_client(token)
     else:
         await validation_of_token_failed()
@@ -177,9 +177,9 @@ async def send_vote_to_gateway (vote: dict, status_code=200) -> None:
     """
 
     token = get_validated_token ()
-    
+
     r = requests.post(
-        "http://" + so.environ['VOTING_SERVICE_PATH'] + "/api/vote",
+        "http://" + os.environ['VOTING_SERVICE_PATH'] + "/api/vote",
         json = {'token': token, 'vote': vote}
     )
 

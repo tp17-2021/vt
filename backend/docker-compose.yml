@@ -13,9 +13,9 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
-    environment: 
+    environment:
       - ROOT_PATH=/backend
-      - VOTING_SERVICE_PATH=host.docker.internal/voting-service-api
+      - VOTING_SERVICE_PATH=host.docker.internal:8080/voting-service-api
     # export useful environment variables to the service's container
     # network_mode: host
     volumes:
