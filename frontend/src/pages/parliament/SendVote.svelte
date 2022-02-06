@@ -12,9 +12,11 @@
 
     // wait for printer
     (async () => {
-        let res = await sendVoteParliament($chosenParty?.party_number, $chosenCandidates.map(candidate => candidate.id));
-
-        console.log("SendVote res", res);
+        let partyNumber = $chosenParty?.party_number
+        let candidates = $chosenCandidates.map(candidate => candidate.id)
+        console.log("sendVoteParliament", partyNumber, candidates);
+        let res = await sendVoteParliament(partyNumber, candidates);
+        console.log("sendVoteParliament res", res);
         printing = false;
 
         if (res.status === 200) {
@@ -22,6 +24,7 @@
             setTimeout(resetVote, 5000);
         } else {
             success = false;
+            alert("vyskytla sa chyba");
         }
     })();
 

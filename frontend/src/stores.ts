@@ -1,6 +1,7 @@
 import {get, writable} from 'svelte/store';
 import {navigateTo} from "svelte-router-spa";
 import {set} from "svelte-router-spa/types/store";
+import {getConfig} from "./api/rest";
 
 
 interface dataInterface {
@@ -65,7 +66,8 @@ let homeRoute : string = '/';
 window.addEventListener('load', () => {
     (async () => {
         // api call simulation, will query gateway in the future
-        data = await fetch("/config_files/config.json").then(x => x.json())
+        data = await getConfig();
+        // data = await fetch("/config_files/config.json").then(x => x.json())
 
         // temporarily permanent json format converter
         data.parties.forEach(party => {
