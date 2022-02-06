@@ -19,7 +19,7 @@
         console.log("sendVoteParliament res", res);
         printing = false;
 
-        if (res.status === 200) {
+        if (res !== null) {
             success = true;
             setTimeout(resetVote, 5000);
         } else {

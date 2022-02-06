@@ -68,7 +68,7 @@ async def receive_config_from_gateway (config: dict) -> None:
 
     global election_config
 
-    election_config = config
+    # election_config = config
 
     await send_election_config_to_client(election_config)
 
@@ -79,7 +79,7 @@ async def get_config() -> None:
 
     """
 
-    app.sio.emit(
+    await app.sio.emit(
         'config', {
             "config": election_config
         }
@@ -97,9 +97,9 @@ async def receive_current_election_state_from_gateway (state: dict) -> None:
 
     global election_state
 
-    election_state = state
+    # election_state = state
 
-    send_current_election_state_to_client(election_state)
+    await send_current_election_state_to_client(election_state)
 
 async def send_current_election_state_to_client (state: dict) -> None:
     """
@@ -111,7 +111,7 @@ async def send_current_election_state_to_client (state: dict) -> None:
     """
 
     await app.sio.emit(
-        'acutal_state', {
+        'actual_state', {
             "state": state
         }
     )
