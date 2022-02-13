@@ -42,4 +42,4 @@ docker-compose -f docker-compose.dev.yml up -d --build
 
 
 ## Gateway needs to be running for backend to work correctly
-use instructions from https://github.com/tp17-2021/gateway/tree/development#usage to set it up
+use instructions from https://github.com/tp17-2021/gateway/tree/development#usage to set it up. After running the backend, in the docker logs you should see the message that connection to gateway is succesfull.
