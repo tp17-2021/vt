@@ -94,7 +94,7 @@ async def receive_current_election_state_from_gateway(state: dict) -> None:
 
     # Download config from gateway if election just started
     if state == START_STATE:
-        receive_config_from_gateway()
+        receive_config_from_gateway ()
 
     await send_current_election_state_to_client(election_state)
 

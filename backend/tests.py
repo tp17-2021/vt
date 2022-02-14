@@ -47,19 +47,19 @@ def mock_send_validated_token_to_client(mocker):
 #     assert src.main.election_config == test_config
 
 
-@pytest.mark.asyncio
-async def test_election_state(mock_send_current_election_state_to_client):
+# @pytest.mark.asyncio
+# async def test_election_state(mock_send_current_election_state_to_client):
 
-    test_state = {"status": "end"}
+#     test_state = {"status": "end"}
 
-    global election_state
-    assert election_state == 'end'
+#     global election_state
+#     assert election_state == 'end'
 
-    mock_send_current_election_state_to_client.set_result( { "code":200, "dict": {} } )
+#     mock_send_current_election_state_to_client.set_result( { "code": 200, "status": "end" } )
 
-    response = await client_2.post("/api/election/state", json = test_state)
-    assert response.status_code == 200
-    assert src.main.election_state == test_state
+#     response = await client_2.post("/api/election/state", json = test_state)
+#     assert response.status_code == 200
+#     assert src.main.election_state == test_state['status']
 
 
 # @pytest.mark.asyncio
@@ -67,7 +67,7 @@ async def test_election_state(mock_send_current_election_state_to_client):
 #     ### Not done
 
 #     with requests_mock.Mocker() as mock_request:
-#         mock_request.post("http://host.docker.internal/voting-service-api/api/token-validity", text="true", status_code=204 )
+#         mock_request.post("http://host.docker.internal/voting-service-api/api/token-validity", text="true", status_code=200 )
 
 #         mock_send_validated_token_to_client.set_result( { "code":200} )
 
@@ -79,9 +79,9 @@ async def test_election_state(mock_send_current_election_state_to_client):
 # async def test_send_vote_to_gateway():
 
 #     with requests_mock.Mocker() as mock_request:
-#         mock_request.post("http://host.docker.internal/voting-service-api/api/vote", text="true", status_code=204 )
+#         mock_request.post("http://host.docker.internal/voting-service-api/api/vote", text="true", status_code=200 )
 #         response = requests.post("http://host.docker.internal/voting-service-api/api/vote",json={ 'token':"valid",'vote':{} } )
 #         assert response.text == "true"
-#         assert response.status_code == 204
+#         assert response.status_code == 200
 
 
