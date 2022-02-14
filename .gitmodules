@@ -1,6 +1,0 @@
-[submodule "vt-frontend"]
-	path = frontend
-	url = git@github.com:tp17-2021/vt-frontend.git
-[submodule "vt-backend"]
-	path = backend
-	url = git@github.com:tp17-2021/vt-backend.git

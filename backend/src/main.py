@@ -31,18 +31,22 @@ app.mount("/public", StaticFiles(directory="src/public"), name="public")
 #     allow_headers=["*"],
 # )
 
+# host.docker.internal  - toto odoslne na cely pocitac a nie dockerovsky
+
 socket_manager = SocketManager(app=app)
 
 __validated_token = "valid"
 election_config = None
 election_state = 'inactive'
 
-def get_validated_token () -> str:
+
+def get_validated_token() -> str:
     """Getter for validated token"""
 
     global __validated_token
 
     return __validated_token
+
 
 def set_validated_token(token) -> None:
     """
@@ -71,6 +75,7 @@ async def receive_config_from_gateway (file: UploadFile = File(...)) -> None:
 
     with open(config_file_path, 'wb') as f:
         f.write(r.content)
+
 
 
 @app.post('/api/election/state')
@@ -109,7 +114,8 @@ async def send_current_election_state_to_client (state: dict) -> None:
         }
     )
 
-async def send_token_to_gateway (token: str) -> None:
+
+async def send_token_to_gateway(token: str) -> None:
     """
     Method for sending token to gateway to validate it
 
@@ -120,7 +126,7 @@ async def send_token_to_gateway (token: str) -> None:
 
     r = requests.post(
         "http://" + os.environ['VOTING_SERVICE_PATH'] + "/api/token-validity",
-        json = {'token': token}
+        json={'token': token}
     )
 
     if r.status_code == 200:
@@ -128,7 +134,8 @@ async def send_token_to_gateway (token: str) -> None:
     else:
         await validation_of_token_failed()
 
-async def send_validated_token_to_client (token: str) -> None:
+
+async def send_validated_token_to_client(token: str) -> None:
     """
     Method for sending validated token to client
 
@@ -144,7 +151,8 @@ async def send_validated_token_to_client (token: str) -> None:
         }
     )
 
-async def validation_of_token_failed () -> None:
+
+async def validation_of_token_failed() -> None:
     """
     Method for sending client a message that validation of token failed
 
@@ -157,7 +165,8 @@ async def validation_of_token_failed () -> None:
         }
     )
 
-async def send_vote_to_gateway (vote: dict, status_code=200) -> None:
+
+async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
     """
     Method for sending recieved vote to gateway. Backend send "success" to client
     if saving of vote was successfull.
@@ -167,18 +176,18 @@ async def send_vote_to_gateway (vote: dict, status_code=200) -> None:
 
     """
 
-    token = get_validated_token ()
+    token = get_validated_token()
 
     r = requests.post(
         "http://" + os.environ['VOTING_SERVICE_PATH'] + "/api/vote",
-        json = {'token': token, 'vote': vote}
+        json={'token': token, 'vote': vote}
     )
 
     r.raise_for_status()
 
 
 @app.post('/api/vote_generated', status_code=200)
-async def vote (vote: dict) -> None:
+async def vote(vote: dict) -> None:
     """
     Api method for recieving vote from client
 
@@ -190,12 +199,25 @@ async def vote (vote: dict) -> None:
     r = await send_vote_to_gateway(vote)
 
 
-### This is for future usage, please keep it here, in final code, this won't be here :)
+@app.on_event("startup")
+async def startup_event():
+    r = requests.get(
+        "http://" + os.environ['VOTING_PROCESS_MANAGER_PATH'] + "/"
+    )
 
-#######################################    TESTING
+    if r.status_code == 200:
+        print("Connection to gateway was sucesfull")
+    else:
+        print("Not connected to gateway !!!")
+
+
+# This is for future usage, please keep it here, in final code, this won't be here :)
+
+# TESTING
 @app.get("/test_token_valid")
 async def test_token_valid():
     await send_token_to_gateway("valid")
+
 
 @app.get("/test_token_invalid")
 async def test_token_invalid():
@@ -206,4 +228,4 @@ async def test_getting_config():
     await receive_config_from_gateway()
 
 if __name__ == '__main__':
-    uvicorn.run('main:app', host="127.0.0.1", port=80)
+    uvicorn.run('main:app', host = '127.0.0.1', port = 80)
