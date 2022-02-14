@@ -2,8 +2,8 @@ import logging
 import os
 import sys
 
-from fastapi import Body, FastAPI, status, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi import Body, FastAPI, status, HTTPException, File, UploadFile
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi_socketio import SocketManager
 import uvicorn
 import requests
@@ -11,14 +11,15 @@ import requests
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-app = FastAPI(root_path=os.environ['ROOT_PATH'])
-
-
 import logging
+
+app = FastAPI(root_path=os.environ['ROOT_PATH'])
 
 LOGGER = logging.getLogger(__name__)
 
-# app.mount("/public", StaticFiles(directory="/public", html = True), name="site")
+START_STATE = 'start'
+
+app.mount("/public", StaticFiles(directory="src/public"), name="public")
 
 # origins = ["http://localhost:8079/", "http://localhost:5000/"]
 
@@ -34,7 +35,7 @@ socket_manager = SocketManager(app=app)
 
 __validated_token = "valid"
 election_config = None
-election_state = {"State":"OFF"}
+election_state = 'inactive'
 
 def get_validated_token () -> str:
     """Getter for validated token"""
@@ -56,50 +57,42 @@ def set_validated_token(token) -> None:
 
     __validated_token = token
 
-@app.post('/api/election/config')
-async def receive_config_from_gateway (config: dict) -> None:
+async def receive_config_from_gateway (file: UploadFile = File(...)) -> None:
     """
     Method for receiving election config from gateway
 
-    Keyword arguments:
-    config -- election config
-
     """
 
-    global election_config
-
-    # election_config = config
-
-    await send_election_config_to_client(election_config)
-
-@app.get('/api/election/config')
-async def get_config() -> None:
-    """
-    Method for sending election config to client
-
-    """
-
-    await app.sio.emit(
-        'config', {
-            "config": election_config
-        }
+    r = requests.get(
+        "http://" + os.environ['STATE_VECTOR_PATH'] + "/config/config.json",
     )
 
+    config_file_path = os.path.join(os.getcwd(), './src/public/config.json')
+
+    with open(config_file_path, 'wb') as f:
+        f.write(r.content)
+
+
 @app.post('/api/election/state')
-async def receive_current_election_state_from_gateway (state: dict) -> None:
+async def receive_current_election_state_from_gateway(state: dict) -> None:
     """
     Method for receiving current election state from gateway
 
     Keyword arguments:
-    config -- election config
+    state -- current election state
 
     """
 
     global election_state
 
-    # election_state = state
+    election_state = state['status']
+
+    # Download config from gateway if election just started
+    if state == START_STATE:
+        receive_config_from_gateway()
 
     await send_current_election_state_to_client(election_state)
+
 
 async def send_current_election_state_to_client (state: dict) -> None:
     """
@@ -208,7 +201,9 @@ async def test_token_valid():
 async def test_token_invalid():
     await send_token_to_gateway("invalid")
 
+@app.get("/get_config_from_gateway")
+async def test_getting_config():
+    await receive_config_from_gateway()
 
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="127.0.0.1", port=80)
-
+if __name__ == '__main__':
+    uvicorn.run('main:app', host="127.0.0.1", port=80)

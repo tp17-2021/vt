@@ -11,6 +11,7 @@ services:
     environment:
       - ROOT_PATH=/backend
       - VOTING_SERVICE_PATH=host.docker.internal:8080/voting-service-api
+      - STATE_VECTOR_PATH=host.docker.internal:8080/statevector
 
   vt:
     build:
