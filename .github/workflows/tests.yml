@@ -1,0 +1,31 @@
+name: VT Backend Tests
+
+on:
+  pull_request:
+    branches: [ master ]
+    types: [ open ]
+
+  push:
+    branches: [ development, EV-121-road-to-monorepo ]
+
+  workflow_dispatch:
+
+jobs:
+  test-vt-backend:
+    runs-on: self-hosted
+    
+    steps:
+      - name: Check current user
+        run: whoami
+
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Where/When am I in context of the GIT?
+        run: git status
+
+      - name: List
+        run: ls -lah
+
+      - name: Tests Docker-Compose
+        run: docker-compose -f docker-compose.test.backend.yml -p vt-test-backend up --build --exit-code-from vt-backend --force-recreate --remove-orphans
