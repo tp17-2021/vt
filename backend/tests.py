@@ -21,14 +21,16 @@ client_2 = ASGISession(app)
 @pytest.fixture()
 def mock_send_current_election_state_to_client(mocker):
     future = asyncio.Future()
-    mocker.patch('src.main' + '.send_current_election_state_to_client', return_value = future)
+    mocker.patch(
+        'src.main' + '.send_current_election_state_to_client', return_value=future)
     return future
 
 
 @pytest.fixture()
 def mock_send_validated_token_to_client(mocker):
     future = asyncio.Future()
-    mocker.patch('src.main' + '.send_validated_token_to_client', return_value = future)
+    mocker.patch('src.main' + '.send_validated_token_to_client',
+                 return_value=future)
     return future
 
 
@@ -61,6 +63,10 @@ def mock_send_validated_token_to_client(mocker):
 #     assert response.status_code == 200
 #     assert src.main.election_state == test_state['status']
 
+@pytest.mark.asyncio
+async def test_default():
+    assert 1 == 1
+
 
 # @pytest.mark.asyncio
 # async def test_send_token_to_gateway(mock_send_validated_token_to_client):
@@ -74,7 +80,6 @@ def mock_send_validated_token_to_client(mocker):
 #         response = await send_token_to_gateway('valid')
 
 
-
 # @pytest.mark.asyncio
 # async def test_send_vote_to_gateway():
 
@@ -83,5 +88,3 @@ def mock_send_validated_token_to_client(mocker):
 #         response = requests.post("http://host.docker.internal/voting-service-api/api/vote",json={ 'token':"valid",'vote':{} } )
 #         assert response.text == "true"
 #         assert response.status_code == 200
-
-
