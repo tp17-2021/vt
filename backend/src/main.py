@@ -202,7 +202,7 @@ async def vote(vote: dict) -> None:
 @app.on_event("startup")
 async def startup_event():
     r = requests.get(
-        "http://" + os.environ['VOTING_PROCESS_MANAGER_PATH'] + "/"
+        "http://" + os.environ['VOTING_PROCESS_MANAGER_PATH']
     )
 
     if r.status_code == 200:
