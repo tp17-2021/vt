@@ -61,7 +61,8 @@ def set_validated_token(token) -> None:
 
     __validated_token = token
 
-async def receive_config_from_gateway (file: UploadFile = File(...)) -> None:
+
+async def receive_config_from_gateway(file: UploadFile = File(...)) -> None:
     """
     Method for receiving election config from gateway
 
@@ -75,7 +76,6 @@ async def receive_config_from_gateway (file: UploadFile = File(...)) -> None:
 
     with open(config_file_path, 'wb') as f:
         f.write(r.content)
-
 
 
 @app.post('/api/election/state')
@@ -94,12 +94,12 @@ async def receive_current_election_state_from_gateway(state: dict) -> None:
 
     # Download config from gateway if election just started
     if state == START_STATE:
-        receive_config_from_gateway ()
+        receive_config_from_gateway()
 
     await send_current_election_state_to_client(election_state)
 
 
-async def send_current_election_state_to_client (state: dict) -> None:
+async def send_current_election_state_to_client(state: dict) -> None:
     """
     Method for sending election config to client
 
@@ -223,9 +223,10 @@ async def test_token_valid():
 async def test_token_invalid():
     await send_token_to_gateway("invalid")
 
+
 @app.get("/get_config_from_gateway")
 async def test_getting_config():
     await receive_config_from_gateway()
 
 if __name__ == '__main__':
-    uvicorn.run('main:app', host = '127.0.0.1', port = 80)
+    uvicorn.run('main:app', host='127.0.0.1', port=80)
