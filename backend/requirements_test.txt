@@ -5,3 +5,4 @@ httpx==0.7.*
 requests-mock
 pytest-asyncio
 electiersa
+datamodel-code-generator

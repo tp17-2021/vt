@@ -14,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 import logging
 
 from electiersa import electiersa
+from src.schemas.votes import VotePartial
 
 
 app = FastAPI(root_path=os.environ['ROOT_PATH'])
@@ -224,7 +225,7 @@ async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
 
 
 @app.post('/api/vote_generated', status_code=200)
-async def vote(vote: dict) -> None:
+async def vote(vote: VotePartial) -> None:
     """
     Api method for recieving vote from client
 
@@ -233,7 +234,7 @@ async def vote(vote: dict) -> None:
 
     """
 
-    r = await send_vote_to_gateway(vote)
+    r = await send_vote_to_gateway(vote.__dict__)
 
 
 @app.on_event("startup")

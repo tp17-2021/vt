@@ -1,0 +1,32 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Votes
+  license:
+    name: MIT
+components:
+  schemas:
+    VotePartial:
+      type: object
+      required:
+        - party_id
+      properties:
+        party_id:
+          type: integer
+        candidate_ids:
+          type: array
+          items:
+            type: integer
+    Vote:
+      allOf:
+        - $ref: '#/components/schemas/VotePartial'
+        - type: object  
+          required:
+            - election_id
+            - token
+          properties:
+            token:
+              type: string
+            election_id:
+              type: string
+
