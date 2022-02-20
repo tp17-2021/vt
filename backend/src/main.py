@@ -201,6 +201,8 @@ async def vote(vote: dict) -> None:
 
 @app.on_event("startup")
 async def startup_event():
+    nfc_listener()
+    #return
     r = requests.get(
         "http://" + os.environ['VOTING_PROCESS_MANAGER_PATH']
     )
@@ -210,6 +212,18 @@ async def startup_event():
     else:
         print("Not connected to gateway !!!")
 
+
+######
+
+def nfc_listener():
+    print("readed started")
+    while(True):
+        nfc_token = input()
+        print("input from nfc reader ", nfc_token)
+        set_validated_token(nfc_token)
+        send_token_to_gateway(nfc_token)
+
+######
 
 # This is for future usage, please keep it here, in final code, this won't be here :)
 
