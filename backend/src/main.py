@@ -118,6 +118,19 @@ async def send_current_election_state_to_client(state: dict) -> None:
     )
 
 
+def encrypt_message(data: dict):
+    with open('/secret/private_key.txt', 'r') as f:
+        my_private_key = f.read()
+
+    with open('/idk_data/g_public_key.txt', 'r') as f:
+        g_public_key = f.read()
+
+
+    encrypted_data = electiersa.encrypt_vote(data, my_private_key, g_public_key)
+
+    return encrypted_data
+
+
 async def send_token_to_gateway(token: str) -> None:
     """
     Method for sending token to gateway to validate it
@@ -126,10 +139,18 @@ async def send_token_to_gateway(token: str) -> None:
     token -- token that voter used in NFC reader
 
     """
+    
+    encrypted_data = encrypt_message({'token': token})
+
+    with open('/idk_data/my_id.txt', 'r') as f:
+        my_id = f.read()
 
     r = requests.post(
         "http://" + os.environ['VOTING_SERVICE_PATH'] + "/api/token-validity",
-        json={'token': token}
+        json={
+            'payload': encrypted_data.__dict__,
+            'voting_terminal_id': my_id,
+        }
     )
 
     if r.status_code == 200:
@@ -181,26 +202,20 @@ async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
 
     token = get_validated_token()
 
-    with open(os.path.join(os.getcwd(), './secret/private_key.txt'), 'r') as f:
-        my_private_key = f.read()
-
-    with open(os.path.join(os.getcwd(), './idk_data/g_public_key.txt'), 'r') as f:
-        g_public_key = f.read()
-
-    with open(os.path.join(os.getcwd(), './idk_data/my_id.txt'), 'r') as f:
-        my_id = f.read()
-
     data = {
         'token': token,
         'vote': vote
     }
-    
-    encrypted_data = electiersa.encrypt_vote(data, my_private_key, g_public_key)
+
+    encrypted_data = encrypt_message(data)
+
+    with open('/idk_data/my_id.txt', 'r') as f:
+        my_id = f.read()
 
     r = requests.post(
         "http://" + os.environ['VOTING_SERVICE_PATH'] + "/api/vote",
         json={
-            'payload': encrypted_data,
+            'payload': encrypted_data.__dict__,
             'voting_terminal_id': my_id,
         }
     )
@@ -224,7 +239,7 @@ async def vote(vote: dict) -> None:
 @app.on_event("startup")
 async def startup_event():
     private_key, public_key = electiersa.get_rsa_key_pair()
-    with open(os.path.join(os.getcwd(), './secret/private_key.txt'), 'w') as f:
+    with open('/secret/private_key.txt', 'w') as f:
         f.write(private_key)
 
     r = requests.post(
@@ -237,13 +252,13 @@ async def startup_event():
     if r.status_code != 200:
         raise Exception("Not connected to gateway !!!")
 
-    g_public_key = r.json()['public_key']
+    g_public_key = r.json()['gateway_public_key']
     my_id = r.json()['new_id']
 
-    with open(os.path.join(os.getcwd(), './idk_data/g_public_key.txt'), 'w') as f:
+    with open('/idk_data/g_public_key.txt', 'w') as f:
         f.write(g_public_key)
 
-    with open(os.path.join(os.getcwd(), './idk_data/my_id.txt'), 'w') as f:
+    with open('/idk_data/my_id.txt', 'w') as f:
         f.write(str(my_id))
 
 

@@ -3,3 +3,4 @@ uvicorn>=0.15.0,<0.16.0
 requests>=2.26.0,<2.26.1
 fastapi_socketio>=0.0.8,<0.0.9
 aiofiles
+electiersa

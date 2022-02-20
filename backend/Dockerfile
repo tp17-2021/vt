@@ -2,9 +2,14 @@ FROM python:3.10-alpine as base
 
 WORKDIR /code
 
+RUN apk add -U gcc g++
+
 COPY ./requirements.txt ./code/requirements.txt
 
 RUN pip3 install --no-cache-dir --upgrade -r ./code/requirements.txt
+
+RUN mkdir /secret
+RUN mkdir /idk_data
 
 COPY ./src /code/src
 

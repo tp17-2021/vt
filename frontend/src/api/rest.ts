@@ -4,7 +4,7 @@ export async function sendVoteParliament(party: number, candidates: [])
 {
     let data = {
         party_id: party,
-        candidates: candidates
+        candidate_ids: candidates
     };
     try {
         let response = await axios.post("/backend/api/vote_generated", data);
