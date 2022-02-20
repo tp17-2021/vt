@@ -3,7 +3,7 @@ import axios from "axios";
 export async function sendVoteParliament(party: number, candidates: [])
 {
     let data = {
-        party: party,
+        party_id: party,
         candidates: candidates
     };
     try {
