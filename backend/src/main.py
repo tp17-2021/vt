@@ -13,6 +13,9 @@ from fastapi.staticfiles import StaticFiles
 
 import logging
 
+from electiersa import electiersa
+
+
 app = FastAPI(root_path=os.environ['ROOT_PATH'])
 
 LOGGER = logging.getLogger(__name__)
@@ -178,9 +181,28 @@ async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
 
     token = get_validated_token()
 
+    with open(os.path.join(os.getcwd(), './secret/private_key.txt'), 'r') as f:
+        my_private_key = f.read()
+
+    with open(os.path.join(os.getcwd(), './idk_data/g_public_key.txt'), 'r') as f:
+        g_public_key = f.read()
+
+    with open(os.path.join(os.getcwd(), './idk_data/my_id.txt'), 'r') as f:
+        my_id = f.read()
+
+    data = {
+        'token': token,
+        'vote': vote
+    }
+    
+    encrypted_data = electiersa.encrypt_vote(data, my_private_key, g_public_key)
+
     r = requests.post(
         "http://" + os.environ['VOTING_SERVICE_PATH'] + "/api/vote",
-        json={'token': token, 'vote': vote}
+        json={
+            'payload': encrypted_data,
+            'voting_terminal_id': my_id,
+        }
     )
 
     r.raise_for_status()
@@ -201,29 +223,31 @@ async def vote(vote: dict) -> None:
 
 @app.on_event("startup")
 async def startup_event():
-    nfc_listener()
-    #return
-    r = requests.get(
-        "http://" + os.environ['VOTING_PROCESS_MANAGER_PATH']
+    private_key, public_key = electiersa.get_rsa_key_pair()
+    with open(os.path.join(os.getcwd(), './secret/private_key.txt'), 'w') as f:
+        f.write(private_key)
+
+    r = requests.post(
+        "http://" + os.environ['VOTING_PROCESS_MANAGER_PATH'],
+        json={
+            'public_key': public_key
+        }
     )
 
-    if r.status_code == 200:
-        print("Connection to gateway was sucesfull")
-    else:
-        print("Not connected to gateway !!!")
+    if r.status_code != 200:
+        raise Exception("Not connected to gateway !!!")
+
+    g_public_key = r.json()['public_key']
+    my_id = r.json()['new_id']
+
+    with open(os.path.join(os.getcwd(), './idk_data/g_public_key.txt'), 'w') as f:
+        f.write(g_public_key)
+
+    with open(os.path.join(os.getcwd(), './idk_data/my_id.txt'), 'w') as f:
+        f.write(str(my_id))
 
 
-######
 
-def nfc_listener():
-    print("readed started")
-    while(True):
-        nfc_token = input()
-        print("input from nfc reader ", nfc_token)
-        set_validated_token(nfc_token)
-        send_token_to_gateway(nfc_token)
-
-######
 
 # This is for future usage, please keep it here, in final code, this won't be here :)
 
