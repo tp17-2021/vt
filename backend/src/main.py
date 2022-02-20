@@ -263,8 +263,7 @@ async def startup_event():
         f.write(str(my_id))
 
 
-
-
+        
 # This is for future usage, please keep it here, in final code, this won't be here :)
 
 # TESTING
