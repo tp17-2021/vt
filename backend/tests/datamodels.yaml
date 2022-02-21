@@ -8,8 +8,6 @@ components:
   schemas:
     VotePartial:
       type: object
-      required:
-        - party_id
       properties:
         party_id:
           type: integer
