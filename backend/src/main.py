@@ -43,6 +43,11 @@ __validated_token = "valid"
 election_config = None
 election_state = 'inactive'
 
+@app.get('/')
+async def hello ():
+    """ Sample testing endpoint """
+
+    return {'message': 'Hello from VT backend!'}
 
 def get_validated_token() -> str:
     """Getter for validated token"""
@@ -140,7 +145,7 @@ async def send_token_to_gateway(token: str) -> None:
     token -- token that voter used in NFC reader
 
     """
-    
+
     encrypted_data = encrypt_message({'token': token})
 
     with open('/idk_data/my_id.txt', 'r') as f:
@@ -244,7 +249,7 @@ async def startup_event():
         f.write(private_key)
 
     r = requests.post(
-        "http://" + os.environ['VOTING_PROCESS_MANAGER_PATH'],
+        "http://" + os.environ['VOTING_PROCESS_MANAGER_PATH'] + '/register-vt',
         json={
             'public_key': public_key
         }
@@ -263,7 +268,7 @@ async def startup_event():
         f.write(str(my_id))
 
 
-        
+
 # This is for future usage, please keep it here, in final code, this won't be here :)
 
 # TESTING
