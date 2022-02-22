@@ -10,9 +10,10 @@ services:
     restart: unless-stopped
     environment:
       - ROOT_PATH=/vt/backend
-      - VOTING_SERVICE_PATH=host.docker.internal:8080/voting-service-api
-      - STATE_VECTOR_PATH=host.docker.internal:8080/statevector
+      - VOTING_SERVICE_PATH=host.docker.internal:8101/voting-service-api
+      - STATE_VECTOR_PATH=host.docker.internal:8101/statevector
       - VOTING_PROCESS_MANAGER_PATH=host.docker.internal:8101/voting-process-manager-api
+
   vt:
     build:
       context: ./
