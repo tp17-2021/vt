@@ -12,7 +12,9 @@ services:
       - ROOT_PATH=/backend
       - VOTING_SERVICE_PATH=host.docker.internal:8080/voting-service-api
       - STATE_VECTOR_PATH=host.docker.internal:8080/statevector
-      - VOTING_PROCESS_MANAGER_PATH=host.docker.internal:8080/voting-process-manager-api/register-vt
+      - VOTING_PROCESS_MANAGER_PATH=host.docker.internal:8080/voting-process-manager-api
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
 
   vt:
     build:
