@@ -19,8 +19,10 @@ class BaseTicket(object):
          """
         self.voting_data = data
 
-    def print_ticket(self, path: str):
+    def print_ticket(self, path: str): 
+        """ Method for creating PDF file from vote """
 
+        
         images = convert_from_path(path)
 
         for i in range(len(images)):
@@ -29,8 +31,6 @@ class BaseTicket(object):
         printer = Network("192.168.192.168")
         printer.image('ticket.jpg')
         printer.cut()
-
-        # Store Pdf with convert_from_path function
 
     def preprocessText(self, candidates: list, max_line_len: int) -> str:
         """

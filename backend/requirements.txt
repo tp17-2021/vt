@@ -6,3 +6,9 @@ aiofiles
 electiersa
 datamodel-code-generator
 httpx
+qrcode
+fpdf
+Pillow>=9.0
+escpos
+pdf2image
+

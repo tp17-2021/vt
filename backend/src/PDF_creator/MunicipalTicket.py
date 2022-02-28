@@ -4,7 +4,7 @@ from PIL import Image
 from escpos.printer import Network
 from pdf2image import convert_from_path
 
-from BaseTicket import BaseTicket
+from src.PDF_creator.BaseTicket import BaseTicket
 
 
 class MunicipalTicket(BaseTicket):
@@ -21,25 +21,19 @@ class MunicipalTicket(BaseTicket):
         super().__init__(data)
 
     def print_ticket(self, path: str):
-
-        # Store Pdf with convert_from_path function
-        images = convert_from_path(path)
-
-        for i in range(len(images)):
-            images[i].save('ticket.jpg', 'JPEG')
-
-        kitchen = Network("192.168.192.168")  # Printer IP Address
-        kitchen.image('ticket.jpg')
-        kitchen.cut()
+        super().print_ticket(path)
 
     def create_pdf(self):
         """ Method for creating PDF file from vote """
 
+        if 'src' in os.listdir():
+            os.chdir("src/PDF_creator")
+
         pdf = FPDF('P', 'mm', (80, 100))
         pdf.add_page()
 
-        pdf.add_font('slovak', '', 'AbhayaLibre-SemiBold.ttf', uni=True)
-        pdf.add_font('slovakBold', '', 'AbhayaLibre-ExtraBold.ttf', uni=True)
+        pdf.add_font('slovak', '', "Calibri Regular.ttf", uni=True)
+        pdf.add_font('slovakBold', '', "Calibri Bold.TTF", uni=True)
 
         pdf.set_font('slovak', '', 9)
         pdf.multi_cell(0, 0, self.voting_data['title'], align='C')
@@ -77,6 +71,6 @@ class MunicipalTicket(BaseTicket):
         img.save("Temp/sample.jpg")
         pdf.image("Temp/sample.png", w=35, h=35)
 
-        pdf.output('Tickets/MinucipalTicket.jpg', 'F')
+        pdf.output('MinucipalTicket.jpg', 'F')
 
-        self.print_ticket('Tickets/MinucipalTicket.pdf')
+        self.print_ticket('MinucipalTicket.pdf')

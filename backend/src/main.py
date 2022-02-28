@@ -14,7 +14,11 @@ from fastapi.staticfiles import StaticFiles
 import logging
 
 from electiersa import electiersa
-from src.schemas.votes import VotePartial
+# from src.schemas.votes import VotePartial
+from src.PDF_creator.BaseTicket import BaseTicket
+from src.PDF_creator.PresidentTicket import PresidentTicket
+from src.PDF_creator.NationalTicket import NationalTicket
+from src.PDF_creator.MunicipalTicket import MunicipalTicket
 
 
 app = FastAPI(root_path=os.environ['ROOT_PATH'])
@@ -70,6 +74,19 @@ def set_validated_token(token) -> None:
 
     __validated_token = token
 
+
+async def print_vote(vote: dict) -> None:
+    """
+    Method to print vote
+
+    Keyword arguments:
+    vote -- users vote in JSON format
+
+    """
+    ticket = NationalTicket(vote)
+    ticket.create_pdf()  
+
+    
 
 async def receive_config_from_gateway(file: UploadFile = File(...)) -> None:
     """
@@ -213,6 +230,8 @@ async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
         'vote': vote
     }
 
+    await print_vote(vote)
+
     encrypted_data = encrypt_message(data)
 
     with open('/idk_data/my_id.txt', 'r') as f:
@@ -230,7 +249,7 @@ async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
 
 
 @app.post('/api/vote_generated', status_code=200)
-async def vote(vote: VotePartial) -> None:
+async def vote(vote) -> None:
     """
     Api method for recieving vote from client
 
@@ -244,6 +263,7 @@ async def vote(vote: VotePartial) -> None:
 
 @app.on_event("startup")
 async def startup_event():
+    """ Method that connect to gateway at start of running VT """
     private_key, public_key = electiersa.get_rsa_key_pair()
     with open('/secret/private_key.txt', 'w') as f:
         f.write(private_key)
@@ -256,7 +276,7 @@ async def startup_event():
     )
 
     if r.status_code != 200:
-        raise Exception("Not connected to gateway !!!")
+       raise Exception("Not connected to gateway !!!")
 
     g_public_key = r.json()['gateway_public_key']
     my_id = r.json()['new_id']
@@ -285,6 +305,27 @@ async def test_token_invalid():
 @app.get("/get_config_from_gateway")
 async def test_getting_config():
     await receive_config_from_gateway()
+
+
+
+@app.get("/test_print")
+async def test_print():
+    data = {}
+    data['title'] = "Volby do narodnej rady"
+    data["party"] = "Smer - socialna demokracia"
+    data["candidates"] = [
+        '1. Marek Ceľuch',
+        '2. Matúš StaŠ',
+        '3. Lucia Janikova',
+        '4. Lilbor Duda',
+        '5. Denis Klenovic',
+        '6. Timotej Kralik',
+        '7. Jaro Erdelyi',
+        '8. Voldemort Voldemort',
+        '9. Neviem Neviem',
+        ]
+
+    await print_vote(data)
 
 if __name__ == '__main__':
     uvicorn.run('main:app', host='127.0.0.1', port=80)

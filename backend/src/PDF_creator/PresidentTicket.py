@@ -2,7 +2,7 @@ from fpdf import FPDF
 import qrcode
 from PIL import Image
 
-from BaseTicket import BaseTicket
+from src.PDF_creator.BaseTicket import BaseTicket
 
 
 class PresidentTicket(BaseTicket):
@@ -18,15 +18,22 @@ class PresidentTicket(BaseTicket):
          """
         super().__init__(data)
 
+
+    def print_ticket(self, path: str):
+        super().print_ticket(path)
+
     def Create_pdf(self):
         """ Method for creating PDF file from vote """
+
+        if 'src' in os.listdir():
+            os.chdir("src/PDF_creator")
 
         pdf = FPDF('P', 'mm', (80, 50))
         pdf.set_auto_page_break(True, margin=5.0)
         pdf.add_page()
 
-        pdf.add_font('slovak', '', 'Calibri Regular.ttf', uni=True)
-        pdf.add_font('slovakBold', '', 'Calibri Bold.TTF', uni=True)
+        pdf.add_font('slovak', '', "Calibri Regular.ttf", uni=True)
+        pdf.add_font('slovakBold', '', "Calibri Bold.TTF", uni=True)
 
         pdf.set_font('slovak', '', 9)
         pdf.multi_cell(0, 0, self.voting_data['title'], align='L')
@@ -52,4 +59,6 @@ class PresidentTicket(BaseTicket):
         pdf.image("Temp/sample.png", w=35, h=33)
         pdf.accept_page_break()
 
-        pdf.output('Tickets/PresidentTIcket.pdf', 'F')
+        pdf.output('PresidentTIcket.pdf', 'F')
+
+        self.print_ticket('NationalPrincipalTIcket.pdf')
