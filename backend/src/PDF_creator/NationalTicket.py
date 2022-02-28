@@ -19,7 +19,7 @@ class NationalTicket(BaseTicket):
         super().__init__(data)
 
     def print_ticket(self, path: str):
-         """ Method for creating PDF file from vote """
+        """ Method for creating PDF file from vote """
         super().print_ticket(path)
 
     def create_pdf(self):
