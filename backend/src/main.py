@@ -85,8 +85,13 @@ async def print_vote(vote: dict) -> None:
     vote -- users vote in JSON format
 
     """
-    ticket = NationalTicket(vote)
-    ticket.create_pdf()  
+
+    try:
+        ticket = NationalTicket(vote)
+        ticket.create_pdf()
+
+    except Exception as e:
+        print('Print failed:', e)
 
     
 
