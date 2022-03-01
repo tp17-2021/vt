@@ -20,6 +20,8 @@ from src.PDF_creator.PresidentTicket import PresidentTicket
 from src.PDF_creator.NationalTicket import NationalTicket
 from src.PDF_creator.MunicipalTicket import MunicipalTicket
 
+from src.schemas.votes import VotePartial
+
 
 app = FastAPI(root_path=os.environ['ROOT_PATH'])
 
@@ -93,15 +95,22 @@ async def receive_config_from_gateway(file: UploadFile = File(...)) -> None:
     Method for receiving election config from gateway
 
     """
-
-    r = requests.get(
-        "http://" + os.environ['STATE_VECTOR_PATH'] + "/config/config.json",
-    )
-
+    
     config_file_path = os.path.join(os.getcwd(), './src/public/config.json')
+    
+    # use local config.json while in dev mode
+    if  'VT_ONLY_DEV' in os.environ and os.environ['VT_ONLY_DEV'] == '1':
+        with open(config_file_path, 'wb') as f, open('/code/tests/config.json', 'rb') as f2:
+            f.write(f2.read())        
+    
+    else:
+        r = requests.get(
+            "http://" + os.environ['STATE_VECTOR_PATH'] + "/config/config.json",
+        )
 
-    with open(config_file_path, 'wb') as f:
-        f.write(r.content)
+
+        with open(config_file_path, 'wb') as f:
+            f.write(r.content)
 
 
 @app.post('/api/election/state')
@@ -162,6 +171,12 @@ async def send_token_to_gateway(token: str) -> None:
     token -- token that voter used in NFC reader
 
     """
+    
+    # dont valid token on G while dev mode
+    if  'VT_ONLY_DEV' in os.environ and os.environ['VT_ONLY_DEV'] == '1':
+        await send_validated_token_to_client(token)
+        
+        return
 
     encrypted_data = encrypt_message({'token': token})
 
@@ -223,6 +238,10 @@ async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
 
     """
 
+    # skip while on dev mode
+    if  'VT_ONLY_DEV' in os.environ and os.environ['VT_ONLY_DEV'] == '1':
+        return
+
     token = get_validated_token()
 
     data = {
@@ -249,7 +268,9 @@ async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
 
 
 @app.post('/api/vote_generated', status_code=200)
-async def vote(vote) -> None:
+async def vote(
+    vote: VotePartial = Body(...),
+) -> None:
     """
     Api method for recieving vote from client
 
@@ -268,24 +289,32 @@ async def startup_event():
     with open('/secret/private_key.txt', 'w') as f:
         f.write(private_key)
 
-    r = requests.post(
-        "http://" + os.environ['VOTING_PROCESS_MANAGER_PATH'] + '/register-vt',
-        json={
-            'public_key': public_key
-        }
-    )
+    if  'VT_ONLY_DEV' in os.environ and os.environ['VT_ONLY_DEV'] == '1':
+        with open('/idk_data/g_public_key.txt', 'w') as f:
+            f.write(electiersa.get_rsa_key_pair()[1])
 
-    if r.status_code != 200:
-       raise Exception("Not connected to gateway !!!")
+        with open('/idk_data/my_id.txt', 'w') as f:
+            f.write(str('vtdev1'))
+        
+    else:
+        r = requests.post(
+            "http://" + os.environ['VOTING_PROCESS_MANAGER_PATH'] + '/register-vt',
+            json={
+                'public_key': public_key
+            }
+        )
 
-    g_public_key = r.json()['gateway_public_key']
-    my_id = r.json()['new_id']
+        if r.status_code != 200:
+            raise Exception("Not connected to gateway !!!")
 
-    with open('/idk_data/g_public_key.txt', 'w') as f:
-        f.write(g_public_key)
+        g_public_key = r.json()['gateway_public_key']
+        my_id = r.json()['new_id']
 
-    with open('/idk_data/my_id.txt', 'w') as f:
-        f.write(str(my_id))
+        with open('/idk_data/g_public_key.txt', 'w') as f:
+            f.write(g_public_key)
+
+        with open('/idk_data/my_id.txt', 'w') as f:
+            f.write(str(my_id))
 
 
 

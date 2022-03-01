@@ -14,6 +14,13 @@ docker-compose up -d --build
 ```
 
 
+### Get it working with or without Gateway
+
+In `docker-compose.yml` change environment variable `VT_ONLY_DEV` to `0` if you want to really communicate with Gateway as intended in final production.
+
+The variable is set to `1` by default, so Gateway is not required to be running locally.
+
+
 ## Running test in docker
 ```
 docker-compose -f docker-compose.test.backend.yml up --build
