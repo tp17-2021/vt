@@ -322,6 +322,21 @@ async def startup_event():
             f.write(str(my_id))
 
 
+# post method for recieving token from client
+@app.post('/token', status_code=200)
+async def token(
+    token: str = Body(...),
+) -> None:
+    """
+    Api method for recieving token from client
+
+    Keyword arguments:
+    token -- token that voter user
+
+    """
+
+    await send_token_to_gateway(token)
+
 
 # This is for future usage, please keep it here, in final code, this won't be here :)
 
