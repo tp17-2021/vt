@@ -176,6 +176,7 @@ async def send_token_to_gateway(token: str) -> None:
     token -- token that voter used in NFC reader
 
     """
+    global __validated_token
     
     # dont valid token on G while dev mode
     if  'VT_ONLY_DEV' in os.environ and os.environ['VT_ONLY_DEV'] == '1':
@@ -198,6 +199,9 @@ async def send_token_to_gateway(token: str) -> None:
 
     if r.status_code == 200:
         await send_validated_token_to_client(token)
+
+        __validated_token = token
+
     else:
         await validation_of_token_failed()
 
@@ -321,6 +325,21 @@ async def startup_event():
         with open('/idk_data/my_id.txt', 'w') as f:
             f.write(str(my_id))
 
+
+# post method for recieving token from client
+@app.post('/token', status_code=200)
+async def token(
+    token: str = Body(...),
+) -> None:
+    """
+    Api method for recieving token from client
+
+    Keyword arguments:
+    token -- token that voter user
+
+    """
+
+    await send_token_to_gateway(token)
 
 
 # This is for future usage, please keep it here, in final code, this won't be here :)
