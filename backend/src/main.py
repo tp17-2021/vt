@@ -176,6 +176,7 @@ async def send_token_to_gateway(token: str) -> None:
     token -- token that voter used in NFC reader
 
     """
+    global __validated_token
     
     # dont valid token on G while dev mode
     if  'VT_ONLY_DEV' in os.environ and os.environ['VT_ONLY_DEV'] == '1':
@@ -198,6 +199,9 @@ async def send_token_to_gateway(token: str) -> None:
 
     if r.status_code == 200:
         await send_validated_token_to_client(token)
+
+        __validated_token = token
+
     else:
         await validation_of_token_failed()
 

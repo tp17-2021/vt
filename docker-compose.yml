@@ -25,3 +25,14 @@ services:
       - vt-backend
     ports:
       - "81:80"
+
+  token-reader:
+    build:
+      context: ./token-reader
+      dockerfile: ./Dockerfile
+    restart: unless-stopped
+    devices:
+    - /dev/usb/bus:/dev/usb/bus
+    privileged: true
+    environment:
+      - TOKEN_URL=vt-backend/token
