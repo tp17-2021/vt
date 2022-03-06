@@ -22,3 +22,8 @@ services:
       - vt-backend
     ports:
       - "8100:80"
+
+  vt-frontend:
+      build:
+        args:
+          vite_base_path: /vp/frontend

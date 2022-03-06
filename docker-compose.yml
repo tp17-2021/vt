@@ -36,3 +36,10 @@ services:
     privileged: true
     environment:
       - TOKEN_URL=vt-backend/token
+
+  vt-frontend:
+      build:
+        context: ./new-frontend
+        dockerfile: ./Dockerfile
+        args:
+          vite_base_path: /frontend

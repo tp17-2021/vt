@@ -31,3 +31,8 @@ services:
     restart: unless-stopped
     volumes:
       - ./frontend:/app
+
+  vt-frontend:
+    build:
+      args:
+        vite_base_path: /frontend
