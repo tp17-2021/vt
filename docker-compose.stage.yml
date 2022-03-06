@@ -25,5 +25,7 @@ services:
 
   vt-frontend:
       build:
+        context: ./new-frontend
+        dockerfile: ./Dockerfile
         args:
           vite_base_path: /vp/frontend
