@@ -47,10 +47,10 @@
 
 <h2 class="mt-3">Zvolení kandidáti na poslancov</h2>
 <div class="chosen-candidates">
-    {#if $vote.candidates_ids.length === 0}
+    {#if $vote.candidate_ids.length === 0}
         <Warning text="Nezvolili ste žiadneho kandidáta"/>
     {/if}
-    {#each $vote.candidates_ids as candidate_id}
+    {#each $vote.candidate_ids as candidate_id}
         <CandidateBox candidate={findCandidateById(party.candidates, candidate_id)}/>
     {/each}
 </div>

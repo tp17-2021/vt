@@ -88,5 +88,5 @@ export const texts = writable([]);
 
 export const vote = writable({
     party_id: null,
-    candidates_ids: []
+    candidate_ids: []
 });

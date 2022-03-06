@@ -13,17 +13,17 @@
 
 
     /**
-     * If candidateId is in $vote.candidates_ids, remove him
+     * If candidateId is in $vote.candidate_ids, remove him
      * else add him
      * @param candidateId
      */
     function switchCandidate(candidateId: number) {
-        if ($vote.candidates_ids.includes(candidateId)) {
-            $vote.candidates_ids = [...$vote.candidates_ids.filter(id => id !== candidateId)]
+        if ($vote.candidate_ids.includes(candidateId)) {
+            $vote.candidate_ids = [...$vote.candidate_ids.filter(id => id !== candidateId)]
         } else {
-            $vote.candidates_ids = [...$vote.candidates_ids, candidateId]
+            $vote.candidate_ids = [...$vote.candidate_ids, candidateId]
         }
-        console.log("$vote.candidates_ids", $vote.candidates_ids)
+        console.log("$vote.candidate_ids", $vote.candidate_ids)
     }
 
     let candidates: Icandidate[] = []
@@ -122,16 +122,16 @@
 <BackButton/>
 <!--    <span slot="subtitle">{$chosenParty?.name}</span>-->
 <div class="chosenCandidates">
-    {#each $vote.candidates_ids as candidateId}
+    {#each $vote.candidate_ids as candidateId}
         <div class="chosenCandidate">
             <div class="name">{findCandidateById(candidates, candidateId).first_name + " " + findCandidateById(candidates, candidateId).last_name}</div>
             <div class="xButton" on:click={()=>switchCandidate(findCandidateById(candidates, candidateId)._id)}>&times;</div>
         </div>
     {/each}
-    {#if $vote.candidates_ids.length === maxCandidates}
+    {#if $vote.candidate_ids.length === maxCandidates}
         <div class="candidateCount">Zvolili ste maximálny počet kandidátov</div>
     {:else}
-        <div class="candidateCount">Ešte môžete zvoliť {maxCandidates - $vote.candidates_ids.length} kandidátov</div>
+        <div class="candidateCount">Ešte môžete zvoliť {maxCandidates - $vote.candidate_ids.length} kandidátov</div>
     {/if}
 </div>
 
@@ -161,7 +161,7 @@
         </div>
         {#each paginatedCandidates as candidate, index}
             <CandidateBox showCheckbox={true} candidate={candidate}
-                          isSelected={$vote.candidates_ids.includes(candidate._id)}
+                          isSelected={$vote.candidate_ids.includes(candidate._id)}
                           on:click={()=>switchCandidate(candidate._id)}/>
         {/each}
     </div>

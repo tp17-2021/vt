@@ -43,6 +43,14 @@ socket.on('validated_token', function (msg, cb) {
  * }
  */
 socket.on('actual_state', function (msg, cb) {
+    if (msg.state === "end") {
+        electionStatus.set(ElectionStatus.ELECTIONS_NOT_STARTED);
+    } else if (msg.state === "start") {
+        electionStatus.set(ElectionStatus.WAITING_FOR_NFC_TAG);
+    } else {
+        alert("WS actual_state - unknown message " + msg.state);
+        electionStatus.set(ElectionStatus.ELECTIONS_NOT_STARTED);
+    }
     console.log("--------- [TODO] actual_state ", msg, cb);
 });
 

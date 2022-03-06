@@ -17,15 +17,6 @@ services:
     stdin_open: true # docker run -i
     tty: true        # docker run -t
 
-  vt:
-    build:
-      context: ./
-      dockerfile: ./frontend/Dockerfile
-    depends_on:
-      - vt-backend
-    ports:
-      - "81:80"
-
   token-reader:
     build:
       context: ./token-reader
@@ -36,10 +27,16 @@ services:
     privileged: true
     environment:
       - TOKEN_URL=vt-backend/token
+    depends_on:
+      - vt-backend
 
   vt-frontend:
-      build:
-        context: ./new-frontend
-        dockerfile: ./Dockerfile
-        args:
-          vite_base_path: /frontend
+    build:
+      context: ./new-frontend
+      dockerfile: ./Dockerfile
+      args:
+        vite_base_path: /frontend
+    depends_on:
+      - vt-backend
+    ports:
+      - 81:80

@@ -14,18 +14,11 @@ services:
       - STATE_VECTOR_PATH=host.docker.internal:8101/statevector
       - VOTING_PROCESS_MANAGER_PATH=host.docker.internal:8101/voting-process-manager-api
 
-  vt:
-    build:
-      context: ./
-      dockerfile: ./frontend/Dockerfile
-    depends_on:
-      - vt-backend
-    ports:
-      - "8100:80"
-
   vt-frontend:
       build:
         context: ./new-frontend
         dockerfile: ./Dockerfile
         args:
-          vite_base_path: /vp/frontend
+          vite_base_path: /vt/frontend
+      ports:
+        - 8100:80
