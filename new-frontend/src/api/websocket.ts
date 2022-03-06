@@ -1,5 +1,6 @@
 import { io } from "socket.io-client";
 import { readable, writable } from "svelte/store";
+import { url } from "./rest";
 // import {url} from "./api";
 
 export enum ElectionStatus {
@@ -13,7 +14,7 @@ export const electionStatus = writable(ElectionStatus.TOKEN_VALID);
 
 
 const socket = io('/', {
-    path: '/backend/ws/socket.io',
+    path: url('/../backend/ws/socket.io'),
     transports: ['polling']
 });
 
