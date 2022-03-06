@@ -180,7 +180,10 @@ async def send_token_to_gateway(token: str) -> None:
     
     # dont valid token on G while dev mode
     if  'VT_ONLY_DEV' in os.environ and os.environ['VT_ONLY_DEV'] == '1':
-        await send_validated_token_to_client(token)
+        if token == 'invalid':
+            await validation_of_token_failed()
+        else:
+            await send_validated_token_to_client(token)
         
         return
 
@@ -231,7 +234,7 @@ async def validation_of_token_failed() -> None:
 
     await app.sio.emit(
         'validated_token', {
-            "data": "",
+            "data": "invalid",
             "message": "This token is not valid. Help."
         }
     )

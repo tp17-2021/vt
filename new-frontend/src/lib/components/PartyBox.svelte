@@ -45,7 +45,7 @@
             <Checkbox bind:checked={isSelected} size={60} />
         </div>
     {/if}
-    <div>{party._id}</div>
+    <div>{party.party_number}</div>
     <div>
         <img src="data:image/png;base64, {party.image_bytes}" alt="" />
     </div>

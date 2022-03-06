@@ -28,7 +28,7 @@ socket.on('validated_token', function (msg, cb) {
     if (msg.data == "valid") {
         console.log("+++++++++++++ validated_token", msg, cb);
         electionStatus.set(ElectionStatus.TOKEN_VALID);
-    } else if (msg.data == "failed") {
+    } else if (msg.data == "invalid") {
         electionStatus.set(ElectionStatus.TOKEN_NOT_VALID);
     } else {
         alert("WS validated_token - unknown message " + msg.data);

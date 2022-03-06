@@ -1,5 +1,6 @@
 <script lang="ts">
     export let href = "";
+    export let type = "secondary";
 
     /**
      * https://idsk.gov.sk/komponenty/tlacidla
@@ -33,7 +34,7 @@
 
     //padding: 8px 10px 7px;
     padding: 15px 10px;
-    margin-bottom: 0;
+    margin-bottom: .5rem;
 
     //display: grid;
     //place-items: center;
@@ -43,6 +44,16 @@
     //width: 100%;
   }
 
+  .secondary {
+
+  }
+
+  .primary {
+    background-color: var(--green);
+    color: white;
+    box-shadow: 0 2px 0 #002d18;
+  }
+
   a {
     text-decoration: none;
   }
@@ -50,12 +61,12 @@
 
 {#if href !== ""}
     <a {href}>
-        <button on:click>
+        <button on:click class={type === "secondary" ? "secondary" : "primary"}>
             <slot></slot>
         </button>
     </a>
 {:else}
-    <button on:click>
+    <button on:click class={type === "secondary" ? "secondary" : "primary"}>
         <slot></slot>
     </button>
 {/if}

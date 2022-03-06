@@ -7,14 +7,10 @@
     import PaginationLinks from "../../lib/components/pagination/PaginationLinks.svelte";
     import {onDestroy, onMount} from "svelte";
     import {Writable, writable} from "svelte/store";
+    import {findCandidateById, findCandidatesByPartyId} from "../../lib/helpers";
+    import BackButton from "../../lib/components/buttons/BackButton.svelte";
 
-    /**
-     * Get candidates array for a chosen party
-     * @param chosenPartyId
-     */
-    function findCandidates(chosenPartyId: number): Icandidate[] {
-        return $parties.find(party => party._id === chosenPartyId).candidates
-    }
+
 
     /**
      * If candidateId is in $vote.candidates_ids, remove him
@@ -30,18 +26,9 @@
         console.log("$vote.candidates_ids", $vote.candidates_ids)
     }
 
-
-
-
     let candidates: Icandidate[] = []
-    candidates = findCandidates($vote.party_id)
-
-    function getCandidateObject(candidateId: number): Icandidate {
-        return candidates.find(candidate => candidate._id === candidateId)
-    }
-
+    candidates = findCandidatesByPartyId($vote.party_id)
     console.log("available candidates", candidates)
-
 
 
     function next() {
@@ -62,6 +49,7 @@
         searchBy: ["first_name", "last_name", "order", "age", "occupation", "residence"],
     }
     let paginatedCandidates = []
+
     function paginateCandidates() {
         searchAndPaginate(paginationObject)  // paginationObject is updated inside this function
         paginatedCandidates = paginationObject.paginatedItems
@@ -112,7 +100,7 @@
   .candidates {
     display: grid;
     padding-bottom: 2rem;
-    height: calc(100vh - 500px);
+    height: calc(100vh - 600px);
     overflow: auto;
 
     .legend {
@@ -131,25 +119,25 @@
   }
 
 </style>
-
+<BackButton/>
 <!--    <span slot="subtitle">{$chosenParty?.name}</span>-->
-    <div class="chosenCandidates">
-        {#each $vote.candidates_ids as candidateId}
-            <div class="chosenCandidate">
-                <div class="name">{getCandidateObject(candidateId).first_name + " " + getCandidateObject(candidateId).last_name}</div>
-                <div class="xButton" on:click={()=>switchCandidate(getCandidateObject(candidateId)._id)}>&times;</div>
-            </div>
-        {/each}
-        {#if $vote.candidates_ids.length === maxCandidates}
-            <div class="candidateCount">Zvolili ste maximálny počet kandidátov</div>
-        {:else}
-            <div class="candidateCount">Ešte môžete zvoliť {maxCandidates - $vote.candidates_ids.length} kandidátov</div>
-        {/if}
-    </div>
+<div class="chosenCandidates">
+    {#each $vote.candidates_ids as candidateId}
+        <div class="chosenCandidate">
+            <div class="name">{findCandidateById(candidates, candidateId).first_name + " " + findCandidateById(candidates, candidateId).last_name}</div>
+            <div class="xButton" on:click={()=>switchCandidate(findCandidateById(candidates, candidateId)._id)}>&times;</div>
+        </div>
+    {/each}
+    {#if $vote.candidates_ids.length === maxCandidates}
+        <div class="candidateCount">Zvolili ste maximálny počet kandidátov</div>
+    {:else}
+        <div class="candidateCount">Ešte môžete zvoliť {maxCandidates - $vote.candidates_ids.length} kandidátov</div>
+    {/if}
+</div>
+
 
 <!--    <Search title="Kandidáti:" bind:filter placeholder="Vyhľadajte kandidáta"/>-->
 <h2>Kandidáti</h2>
-    <i>Kliknutím označte 5 poslancov, ktorých chcete voliť.</i>
 
 <!--    search input -->
 <input type="text" id="search" placeholder="Vyhľadajte kandidáta" on:input={e => {
@@ -157,9 +145,13 @@
     paginationObject.searchTerm = e.target.value
     paginateCandidates(paginationObject)
 }}>
+<i>Kliknutím označte 5 poslancov, ktorých chcete voliť.</i>
 
 
-    <div class="candidates">
+<div class="candidates">
+    <div>
+
+
         <div class="legend">
             <span>Meno</span>
             <span>Tituly</span>
@@ -168,13 +160,14 @@
             <span>Bydlisko</span>
         </div>
         {#each paginatedCandidates as candidate, index}
-            <CandidateBox showCheckbox={true} candidate={candidate} isSelected={$vote.candidates_ids.includes(candidate._id)} on:click={()=>switchCandidate(candidate._id)}/>
+            <CandidateBox showCheckbox={true} candidate={candidate}
+                          isSelected={$vote.candidates_ids.includes(candidate._id)}
+                          on:click={()=>switchCandidate(candidate._id)}/>
         {/each}
-
     </div>
-    <Button on:click={next}>Potvrdiť</Button>
-    <PaginationLinks paginationObject={paginationObject} paginationObjectChanged={paginateCandidates}/>
-
+</div>
+<PaginationLinks paginationObject={paginationObject} paginationObjectChanged={paginateCandidates}/>
+<Button on:click={next} type="primary">Potvrdiť</Button>
 
 
 <!--    <div class="buttonArea">-->

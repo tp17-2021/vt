@@ -4,6 +4,10 @@
     import Button from "../../lib/components/buttons/Button.svelte";
     import {parties, vote} from "../../api/stores";
     import {goto, url} from "@roxi/routify";
+    import {get} from "svelte/store";
+    import type {IpaginationObject} from "../../lib/components/pagination/paginate";
+    import {searchAndPaginate} from "../../lib/components/pagination/paginate";
+    import PaginationLinks from "../../lib/components/pagination/PaginationLinks.svelte";
 
     $: console.log($parties);
 
@@ -26,18 +30,43 @@
             $goto("/parliament/candidates/");
         }
     }
+
+    // // --- pagination and search ---
+    let paginationObject: IpaginationObject = {
+        items: get(parties),
+        paginatedItems: [],
+        searchTerm: "",
+        currentPageNumber: 1,
+        countOfPages: 1,
+        itemsPerPage: 5,
+        searchBy: ["name"],
+    }
+    let paginatedParties = []
+    function paginateParties() {
+        searchAndPaginate(paginationObject)  // paginationObject is updated inside this function
+        paginatedParties = paginationObject.paginatedItems
+    }
     
 </script>
 
-<!-- <Search
-    title="Kandidujúce strany:"
-    bind:filter
-    placeholder="Vyhľadajte stranu"
-/> -->
+<style>
+    .parties {
+        height: calc(100vh - 500px);
+    }
+</style>
+
 <h2>Kandidujúce strany:</h2>
+
+<!--    search input -->
+<input type="text" id="search" placeholder="Vyhľadajte kandidujúcu stranu" on:input={e => {
+    paginationObject.currentPageNumber = 1
+    paginationObject.searchTerm = e.target.value
+    paginateParties(paginationObject)
+}}>
+
 <i>Kliknutím označte stranu, ktorú chcete voliť.</i>
 <div class="parties">
-    {#each $parties as party}
+    {#each paginatedParties as party}
         <div on:click={() => chooseParty(party._id === $vote.party_id ? null : party)}>
             <PartyBox
                     {party}
@@ -49,7 +78,8 @@
 
     {/each}
 </div>
-<Button on:click={next}>Potvrdiť</Button>
+<PaginationLinks paginationObject={paginationObject} paginationObjectChanged={paginateParties}/>
+<Button on:click={next} type="primary">Potvrdiť</Button>
 
 
 <!--<Button >-->

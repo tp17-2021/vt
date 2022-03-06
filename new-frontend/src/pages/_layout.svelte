@@ -35,7 +35,7 @@
 {#if $configLoaded}
     <Header />
     <main>
-        <BreadCrumb />
+<!--        <BreadCrumb />-->
         <Spinner />
         <slot />
     </main>
