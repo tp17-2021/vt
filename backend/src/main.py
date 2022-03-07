@@ -48,6 +48,43 @@ socket_manager = SocketManager(app=app)
 __validated_token = "valid"
 election_config = None
 election_state = 'inactive'
+vt_id = None
+
+
+###--------------
+import socketio
+
+sio = socketio.Client()
+websocket_path = 'http://host.docker.internal:8080'
+sio.connect(websocket_path, socketio_path = 'voting-process-manager-api/ws/socket.io')
+
+@sio.on('actual_state')
+async def on_actual_state_message(data):
+    global election_state
+
+    print('recieved actual_state!', data)
+    state = data['state']
+
+    # save current status of voting terminal
+    election_state = 'active' if(state == START_STATE) else 'inactive'
+
+    # Download config from gateway if election just started
+    if state == START_STATE:
+        receive_config_from_gateway()
+
+    await send_current_election_state_to_client(election_state)
+
+    # Emit event to gateway
+    sio.emit('vt_stauts',
+        {
+            'staus': election_state,
+            'vt_id': vt_id,
+            'sid': sio.sid,
+        }
+    )
+
+###-------------
+
 
 @app.get('/')
 async def hello ():
@@ -118,6 +155,7 @@ async def receive_config_from_gateway(file: UploadFile = File(...)) -> None:
             f.write(r.content)
 
 
+# TODO remove this
 @app.post('/api/election/state')
 async def receive_current_election_state_from_gateway(state: dict) -> None:
     """
@@ -294,6 +332,8 @@ async def vote(
 @app.on_event("startup")
 async def startup_event():
     """ Method that connect to gateway at start of running VT """
+    global vt_id
+
     private_key, public_key = electiersa.get_rsa_key_pair()
     with open('/secret/private_key.txt', 'w') as f:
         f.write(private_key)
@@ -317,13 +357,23 @@ async def startup_event():
             raise Exception("Not connected to gateway !!!")
 
         g_public_key = r.json()['gateway_public_key']
-        my_id = r.json()['new_id']
+        vt_id = my_id = r.json()['new_id']
 
         with open('/idk_data/g_public_key.txt', 'w') as f:
             f.write(g_public_key)
 
         with open('/idk_data/my_id.txt', 'w') as f:
             f.write(str(my_id))
+    
+    # Emit event to gateway
+    sio.emit('vt_stauts',
+        {
+            'staus': election_state,
+            'vt_id': vt_id,
+            'sid': sio.sid,
+        }
+    )
+
 
 
 # post method for recieving token from client
