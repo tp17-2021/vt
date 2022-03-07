@@ -24,16 +24,12 @@
       grid-template-columns: 60px 30px 150px 1fr;
     }
 
-
-
     img {
       width: 150px;
       height: auto;
     }
 
     &.chosen {
-      //border: 4px solid var(--yellow);
-      //margin: -4px;
       background-color: var(--yellow);
     }
   }

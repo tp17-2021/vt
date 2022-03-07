@@ -1,9 +1,22 @@
 import { io } from "socket.io-client";
-import { readable, writable } from "svelte/store";
+import { writable } from "svelte/store";
 import { url } from "./rest";
 import {vote} from "./stores";
-// import {url} from "./api";
+import {isDevelopmentMode} from "../lib/helpers";
 
+/**
+ * Connect to backend websocket
+ */
+const socket = io('/', {
+    path: url('/../backend/ws/socket.io'),
+    transports: ['polling']
+});
+
+
+
+/**
+ * Election status
+ */
 export enum ElectionStatus {
     ELECTIONS_NOT_STARTED = "inactive",
     TOKEN_NOT_VALID = "error",
@@ -12,44 +25,44 @@ export enum ElectionStatus {
     VOTE_ERROR = "vote_error",
     VOTE_SUCCESS = "vote_success",
 }
-
 export const electionStatus = writable(ElectionStatus.ELECTIONS_NOT_STARTED);
-
 electionStatus.subscribe(status => {
-    // if election status changes to TOKEN_VALID, clear vote store from previous vote
-    if (status === ElectionStatus.TOKEN_VALID) {
+    // if election status changes to beginning state or to one of end states, clear vote store from previous vote
+    if (status === ElectionStatus.TOKEN_VALID || status === ElectionStatus.VOTE_SUCCESS || status === ElectionStatus.VOTE_ERROR) {
         // @ts-ignore
         vote.reset();
     }
 });
 
-// if development, set electionStatus to TOKEN_VALID for the ability to modify the app without docker
-if (process.env.NODE_ENV === "development") {
+
+/**
+ * if development mode (npm run dev), set electionStatus to TOKEN_VALID for the ability to modify the app without running the backend
+ */
+if (isDevelopmentMode) {
     electionStatus.set(ElectionStatus.TOKEN_VALID);
 }
 
 
-const socket = io('/', {
-    path: url('/../backend/ws/socket.io'),
-    transports: ['polling']
-});
-
-
-
-socket.on('connect', function (event) {
+/**
+ * Tell backend that we connected to the socket (send 'join' event)
+ * Then backend will send us more configuration data
+ */
+socket.on('connect',  () => {
     console.log('user is connected now');
     socket.emit('join', {data: 'User connected'});
 });
 
-socket.on('validated_token', function (msg, cb) {
-    console.log("WS avalidated_token", msg, cb);
+
+
+socket.on('validated_token', msg => {
+    console.log("WS validated_token", msg);
     if (msg.data == "valid") {
-        console.log("+++++++++++++ validated_token", msg, cb);
+        console.log("validated_token", msg);
         electionStatus.set(ElectionStatus.TOKEN_VALID);
     } else if (msg.data == "invalid") {
         electionStatus.set(ElectionStatus.TOKEN_NOT_VALID);
     } else {
-        alert("WS validated_token - unknown message " + msg.data);
+        console.error("WS validated_token - unknown message " + msg.data);
         electionStatus.set(ElectionStatus.TOKEN_NOT_VALID);
     }
 
@@ -61,8 +74,8 @@ socket.on('validated_token', function (msg, cb) {
  *    "state": state
  * }
  */
-socket.on('actual_state', function (msg, cb) {
-    console.log("WS actual_state", msg, cb);
+socket.on('actual_state', msg => {
+    console.log("WS actual_state", msg);
     if (msg.state === "end" || msg.state === "inactive") {
         electionStatus.set(ElectionStatus.ELECTIONS_NOT_STARTED);
     } else if (msg.state === "start") {
@@ -72,7 +85,7 @@ socket.on('actual_state', function (msg, cb) {
     } else if (msg.state === "vote_success") {
         electionStatus.set(ElectionStatus.VOTE_SUCCESS);
     } else {
-        alert("WS actual_state - unknown message " + msg.state);
+        console.error("WS actual_state - unknown message " + msg.state);
         electionStatus.set(ElectionStatus.ELECTIONS_NOT_STARTED);
     }
 });
@@ -83,20 +96,12 @@ socket.on('actual_state', function (msg, cb) {
  *           "config": config
  *       }
  */
-socket.on('config', function (msg, cb) {
-    console.log("--------- [TODO] config ", msg, cb);
+socket.on('config', msg => {
+    console.log("TODO WS config ", msg);
 });
 
-
-// 'saving_vote_message', {
-//     "data": message,
-//     "message": "This message came from vote DB service"
-// }
-socket.on('saving_vote_message', function (msg, cb) {
-    console.log("saving_vote_message", msg, cb);
+socket.on('saving_vote_message', msg => {
+    console.log("TODO WS saving_vote_message", msg);
 });
-
-// socket.emit('client_stop_event', {data: 'Stop doing something'});
-
 
 export {socket};

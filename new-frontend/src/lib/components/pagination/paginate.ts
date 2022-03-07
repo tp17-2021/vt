@@ -42,10 +42,8 @@ function removeAccents(str) {
     return str.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
 }
 
-export function searchAndPaginate(paginationObject: IpaginationObject) {
+export function searchAndPaginate(paginationObject: IpaginationObject): void {
     const filtered = search(paginationObject.items, paginationObject.searchTerm, paginationObject.searchBy);
-    // console.log("filtered", filtered);
     paginationObject.countOfPages = getNumberOfPages(filtered, paginationObject.itemsPerPage);
     paginationObject.paginatedItems = paginate(filtered, paginationObject.currentPageNumber, paginationObject.itemsPerPage);
-    return paginationObject;
 }

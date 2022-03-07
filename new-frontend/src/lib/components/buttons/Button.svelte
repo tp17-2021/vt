@@ -1,6 +1,7 @@
 <script lang="ts">
     export let href = "";
     export let type = "secondary";
+    export let size = "medium";
 
     /**
      * https://idsk.gov.sk/komponenty/tlacidla
@@ -16,7 +17,7 @@
     -webkit-font-smoothing: antialiased;
     font-weight: 400;
     font-size: 1rem;
-    line-height: 1.1875;
+
     box-sizing: border-box;
     display: inline-block;
     position: relative;
@@ -31,17 +32,15 @@
     background-color: #f3f2f1;
     box-shadow: 0 2px 0 #929191;
     color: #0b0c0c;
-
-    //padding: 8px 10px 7px;
     padding: 15px 10px;
-    margin-bottom: .5rem;
+  }
 
-    //display: grid;
-    //place-items: center;
-    //background-color: #cecece;
-    //padding: 20px;
-    //border-bottom: 5px solid black;
-    //width: 100%;
+  .small {
+    line-height: 1.1875;
+  }
+
+  .medium {
+    line-height: 2.1875;
   }
 
   .secondary {
@@ -61,12 +60,12 @@
 
 {#if href !== ""}
     <a {href}>
-        <button on:click class={type === "secondary" ? "secondary" : "primary"}>
+        <button on:click class={(type === "secondary" ? "secondary" : "primary") + " " + (size === "small" ? "small" : "medium")}>
             <slot></slot>
         </button>
     </a>
 {:else}
-    <button on:click class={type === "secondary" ? "secondary" : "primary"}>
+    <button on:click class={(type === "secondary" ? "secondary" : "primary") + " " + (size === "small" ? "small" : "medium")}>
         <slot></slot>
     </button>
 {/if}

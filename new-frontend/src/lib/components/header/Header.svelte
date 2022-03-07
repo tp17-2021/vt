@@ -1,37 +1,41 @@
 <script>
-	import { url } from "@roxi/routify";
-	import {texts} from "../../../api/stores";
+    import {url} from "@roxi/routify";
+    import {texts} from "../../../api/stores";
 
-	let title = $texts.elections_name_long.sk;
+    let title = $texts.elections_name_long.sk;
 </script>
 
 <header>
-	<div class="header-content">
-		<img src={$url("/img/sk.png")} alt="" height="50px" />
-		<div>{title}</div>
-	</div>
+    <div class="header-content">
+        <img src={$url("/img/sk.png")} alt="" height="50px"/>
+        <div>{title}</div>
+    </div>
 </header>
 
-<style>
-	header {
-		background-color: black;
-		width: 100%;
-	}
-	.header-content {
-		color: white;
-		padding: 1rem;
-		font-size: 24px;
+<style lang="scss">
+    header {
+        background-color: black;
+        width: 100%;
+        overflow: hidden;
+    }
 
-		display: flex;
-		place-items: center;
-		width: 100%;
-		max-width: 768px;
+    .header-content {
+        color: white;
+        font-size: 24px;
 
-		margin: 0 auto;
-	}
+        display: flex;
+        place-items: center;
+        width: 100%;
+        max-width: 768px;
 
-	img {
-		margin-right: 1rem;
-		margin-left: 1rem;
-	}
+        margin: 1rem auto;
+
+        .header-content > div {
+            padding: 0 1rem;
+        }
+    }
+
+    img {
+        margin: 0 1rem;
+    }
 </style>

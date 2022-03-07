@@ -28,8 +28,6 @@
     }
 
     &.chosen {
-      //border: 4px solid var(--yellow);
-      //margin: 1px -4px; // top/bottom = 5px original - 4px border = 1 px; left/right = -4px border
       background-color: var(--yellow);
     }
   }

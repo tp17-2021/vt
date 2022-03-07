@@ -12,5 +12,5 @@
     }
 </style>
 <div class="back-button-container">
-    <Button on:click={()=>navigateBack()}>❮ späť</Button>
+    <Button on:click={()=>navigateBack()} size="small">❮ späť</Button>
 </div>

@@ -5,9 +5,10 @@
     import {sendVoteParliament} from "../../api/rest";
     import CandidateBox from "../../lib/components/CandidateBox.svelte";
     import PartyBox from "../../lib/components/PartyBox.svelte";
-    import {findCandidateById, findCandidatesByPartyId, findPartyById} from "../../lib/helpers";
+    import {findCandidateById, findPartyById} from "../../lib/helpers";
     import Warning from "../../lib/components/Warning.svelte";
     import BackButton from "../../lib/components/buttons/BackButton.svelte";
+    import ButtonsContainer from "../../lib/components/buttons/ButtonsContainer.svelte";
 
     function confirm() {
         sendVoteParliament()
@@ -15,7 +16,6 @@
                 $goto("/parliament/success");
             })
             .catch(() => {
-                // alert("Vyskytla sa chyba pri odoslaní hlasu");
                 $goto("/parliament/error");
             });
     }
@@ -36,8 +36,6 @@
 
 <BackButton/>
 <h2>Potvrdenie voľby</h2>
-
-
 <h2>Zvolená strana</h2>
 {#if $vote.party_id === null}
     <Warning text="Nezvolili ste žiadnu politickú stranu"/>
@@ -54,13 +52,9 @@
         <CandidateBox candidate={findCandidateById(party.candidates, candidate_id)}/>
     {/each}
 </div>
-
-<Button on:click={confirm} type="primary">Odoslať hlas</Button>
-<Button on:click={changeVote}>Chcem upraviť svoju voľbu</Button>
-
-<pre>
-    {JSON.stringify($vote, null, 2)}
-</pre>
-
+<ButtonsContainer>
+    <Button on:click={confirm} type="primary">Odoslať hlas</Button>
+    <Button on:click={changeVote}>Chcem upraviť svoju voľbu</Button>
+</ButtonsContainer>
 
 

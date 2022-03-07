@@ -1,15 +1,16 @@
 import axios from "axios";
 import {configLoaded, parties, texts, vote} from "./stores";
 import {get} from "svelte/store";
-
-// TODO: temporary solution, will call real api in the future
-const base = (import.meta.env.VITE_BASE_PATH ?? "");
-console.log("base", base);
+import {base} from "../lib/helpers";
 
 export function url(path: string) {
     return `${base}${path}`;
 }
 
+/**
+ * Get config from backend
+ * TODO: really get config from backend, not file in public folder
+ */
 export async function loadConfig()
 {
     try {
@@ -17,10 +18,9 @@ export async function loadConfig()
         return response.data;
     } catch (error) {
         console.error("vyskytla sa chyba getConfig(): " + JSON.stringify(error, null, 2) );
-        return null;
+        throw error;
     }
 }
-
 loadConfig().then(data => {
     console.log("config data", data);
     parties.set(data.parties);
@@ -28,7 +28,9 @@ loadConfig().then(data => {
     configLoaded.set(true);
 });
 
-
+/**
+ * Send vote to backend
+ */
 export async function sendVoteParliament()
 {
     try {
