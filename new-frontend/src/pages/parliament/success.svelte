@@ -1,11 +1,7 @@
 <script>
     import ImageScreen, {icons} from "../../lib/ImageScreen.svelte";
-    import {goto} from "@roxi/routify";
 
-    setTimeout(() => {
-        $goto("/");
-    }, 5000);
-
+    // status will be automatically changed using websocket from backend to electionStatus.WAITING_FOR_NFC_TAG to switch back to /
 </script>
 
 <ImageScreen icon={icons.SUCCESS} title="Váš hlas bol započítaný">

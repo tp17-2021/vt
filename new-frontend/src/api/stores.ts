@@ -90,3 +90,11 @@ export const vote = writable({
     party_id: null,
     candidate_ids: []
 });
+
+// @ts-ignore
+vote.reset = () => {
+    vote.set({
+        party_id: null,
+        candidate_ids: []
+    });
+};

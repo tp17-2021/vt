@@ -6,6 +6,7 @@
     import { onMount } from "svelte";
     import { ElectionStatus, electionStatus } from "../api/websocket";
     import {configLoaded, electionType} from "../api/stores";
+    import {currentUrl} from "../lib/currentUrlStore";
 
     function statusChanged(electionStatus, configLoaded): void {
         if (configLoaded) {
@@ -18,11 +19,23 @@
                 $goto("/error");
             } else if (electionStatus === ElectionStatus.WAITING_FOR_NFC_TAG) {
                 $goto("/enabled");
+            } else if (electionStatus === ElectionStatus.VOTE_ERROR) {
+                $goto(`/${$electionType}/error`);
+            } else if (electionStatus === ElectionStatus.VOTE_SUCCESS) {
+                $goto(`/${$electionType}/success`);
             } else {
                 alert("Unknown voting status: " + electionStatus);
             }
         } else {
             console.log("Config not loaded yet, waiting for it...");
+        }
+    }
+
+    // if $goto("/") is used , catch this change
+    // because $electionStatus is not changed, routing is not applied without this code
+    $: {
+        if ($currentUrl === "/") {
+            statusChanged($electionStatus, $configLoaded)
         }
     }
 

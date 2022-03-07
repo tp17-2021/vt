@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 import sys
@@ -301,7 +302,40 @@ async def vote(
 
     """
 
-    r = await send_vote_to_gateway(vote.__dict__)
+    try:
+        await send_vote_to_gateway(vote.__dict__)
+        # raise ValueError("Simulated error")
+        await app.sio.emit(
+            'actual_state', {
+                "state": 'vote_success',
+                "message": "Vote was successfully saved, sleeping 5 seconds to show success message"
+            }
+        )
+        await asyncio.sleep(5)
+        await app.sio.emit(
+            'actual_state', {
+                "state": 'start',
+                "message": "Ready to accept new vote"
+            }
+        )
+    except Exception as e:
+        await app.sio.emit(
+            'actual_state', {
+                "state": 'vote_error',
+                "message": "Vote was not saved, sleeping 10 seconds"
+            }
+        )
+        await asyncio.sleep(10)
+        await app.sio.emit(
+            'actual_state', {
+                "state": 'start',
+                "message": "Ready to accept new vote"
+            }
+        )
+
+    
+
+    
 
 
 @app.on_event("startup")
