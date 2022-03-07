@@ -49,6 +49,16 @@ __validated_token = "valid"
 election_config = None
 election_state = 'inactive'
 
+@app.sio.on('join')
+async def handle_join(sid, *args, **kwargs):
+    await send_current_election_state_to_client(election_state)
+
+    # await app.sio.emit(
+    #     'writer_status', {
+    #         'status' : 'idle' if state_write else 'off',
+    #     }
+    # )
+
 @app.get('/')
 async def hello ():
     """ Sample testing endpoint """

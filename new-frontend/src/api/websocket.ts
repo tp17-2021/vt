@@ -4,13 +4,13 @@ import { url } from "./rest";
 // import {url} from "./api";
 
 export enum ElectionStatus {
-    ELECTIONS_NOT_STARTED = "disabled",
+    ELECTIONS_NOT_STARTED = "inactive",
     TOKEN_NOT_VALID = "error",
     TOKEN_VALID = "success",
     WAITING_FOR_NFC_TAG = "enabled",
 }
 
-export const electionStatus = writable(ElectionStatus.TOKEN_VALID);
+export const electionStatus = writable(ElectionStatus.ELECTIONS_NOT_STARTED);
 
 
 const socket = io('/', {
@@ -18,9 +18,11 @@ const socket = io('/', {
     transports: ['polling']
 });
 
+
+
 socket.on('connect', function (event) {
     console.log('user is connected now');
-    // socket.emit('client_connect_event', {data: 'User connected'});
+    socket.emit('join', {data: 'User connected'});
 });
 
 socket.on('validated_token', function (msg, cb) {
@@ -44,7 +46,7 @@ socket.on('validated_token', function (msg, cb) {
  * }
  */
 socket.on('actual_state', function (msg, cb) {
-    if (msg.state === "end") {
+    if (msg.state === "end" || msg.state === "inactive") {
         electionStatus.set(ElectionStatus.ELECTIONS_NOT_STARTED);
     } else if (msg.state === "start") {
         electionStatus.set(ElectionStatus.WAITING_FOR_NFC_TAG);
