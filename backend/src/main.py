@@ -1,4 +1,5 @@
 import asyncio
+from enum import Enum
 import logging
 import os
 import sys
@@ -28,7 +29,6 @@ app = FastAPI(root_path=os.environ['ROOT_PATH'])
 
 LOGGER = logging.getLogger(__name__)
 
-START_STATE = 'start'
 
 app.mount("/public", StaticFiles(directory="src/public"), name="public")
 
@@ -44,21 +44,30 @@ app.mount("/public", StaticFiles(directory="src/public"), name="public")
 
 # host.docker.internal  - toto odoslne na cely pocitac a nie dockerovsky
 
+
+# enum for election_states
+class ElectionStates(object):
+    ELECTIONS_NOT_STARTED = 'elections_not_started'     # elections are disabled
+    WAITING_FOR_NFC_TAG = 'waiting_for_scan'            # elections are enabled and waiting for NFC tag to be scanned
+    TOKEN_VALID = 'token_valid'                         # NFC tag was scanned and is valid - user is currently choosing their vote
+    TOKEN_NOT_VALID = 'token_not_valid'                 # NFC tag was scanned, but is not valid
+    VOTE_SUCCESS = 'vote_success'                       # (Only if TOKEN_VALID) Vote was successfully casted to the gateway
+    VOTE_ERROR = 'vote_error'                           # (Only if TOKEN_VALID) There was an error sending the vote to gateway
+
+
 socket_manager = SocketManager(app=app)
 
 __validated_token = "valid"
 election_config = None
-election_state = 'inactive'
+election_state = ElectionStates.ELECTIONS_NOT_STARTED
+
+
+
+
 
 @app.sio.on('join')
 async def handle_join(sid, *args, **kwargs):
-    await send_current_election_state_to_client(election_state)
-
-    # await app.sio.emit(
-    #     'writer_status', {
-    #         'status' : 'idle' if state_write else 'off',
-    #     }
-    # )
+    await send_current_election_state_to_frontend()
 
 @app.get('/')
 async def hello ():
@@ -138,19 +147,45 @@ async def receive_current_election_state_from_gateway(state: dict) -> None:
     state -- current election state
 
     """
+    print("-------------------", state['status'])
+    await change_state_and_send_to_frontend(state['status'])
+
+    
+
+async def change_state_and_send_to_frontend(new_state: ElectionStates) -> None:
+    """
+    Method for changing election state and sending it to client
+    """
 
     global election_state
+    
+    # continue only if state was changed
+    if new_state == election_state:
+        return
 
-    election_state = state['status']
+    if new_state == ElectionStates.TOKEN_VALID and election_state == ElectionStates.ELECTIONS_NOT_STARTED:
+        raise HTTPException(status_code=400, detail='Election not started (2)')
 
+    if new_state == ElectionStates.TOKEN_NOT_VALID and election_state == ElectionStates.ELECTIONS_NOT_STARTED:
+        raise HTTPException(status_code=400, detail='Election not started (3)')
+
+    if new_state not in [ElectionStates.ELECTIONS_NOT_STARTED, ElectionStates.WAITING_FOR_NFC_TAG, ElectionStates.TOKEN_VALID, ElectionStates.TOKEN_NOT_VALID, ElectionStates.VOTE_SUCCESS, ElectionStates.VOTE_ERROR]:
+        print('Invalid state - ' + str(new_state))
+        raise HTTPException(status_code=400, detail='Invalid state - ' + str(new_state))
+
+    
+    
     # Download config from gateway if election just started
-    if state == START_STATE:
+    if new_state == ElectionStates.WAITING_FOR_NFC_TAG and election_state == ElectionStates.ELECTIONS_NOT_STARTED:
         receive_config_from_gateway()
 
-    await send_current_election_state_to_client(election_state)
+    print("Changed state to:", new_state)
+    election_state = new_state
+
+    await send_current_election_state_to_frontend()
 
 
-async def send_current_election_state_to_client(state: dict) -> None:
+async def send_current_election_state_to_frontend() -> None:
     """
     Method for sending election config to client
 
@@ -159,9 +194,11 @@ async def send_current_election_state_to_client(state: dict) -> None:
 
     """
 
+    global election_state
+
     await app.sio.emit(
-        'actual_state', {
-            "state": state
+        'changed_election_state', {
+            "state": election_state
         }
     )
 
@@ -192,10 +229,9 @@ async def send_token_to_gateway(token: str) -> None:
     # dont valid token on G while dev mode
     if  'VT_ONLY_DEV' in os.environ and os.environ['VT_ONLY_DEV'] == '1':
         if token == 'invalid':
-            await validation_of_token_failed()
+            await change_state_and_send_to_frontend(ElectionStates.TOKEN_NOT_VALID)
         else:
-            await send_validated_token_to_client(token)
-        
+            await change_state_and_send_to_frontend(ElectionStates.TOKEN_VALID)
         return
 
     encrypted_data = encrypt_message({'token': token})
@@ -212,43 +248,12 @@ async def send_token_to_gateway(token: str) -> None:
     )
 
     if r.status_code == 200:
-        await send_validated_token_to_client(token)
+        await change_state_and_send_to_frontend(ElectionStates.TOKEN_VALID)
 
         __validated_token = token
 
     else:
-        await validation_of_token_failed()
-
-
-async def send_validated_token_to_client(token: str) -> None:
-    """
-    Method for sending validated token to client
-
-    Keyword arguments:
-    token -- validated token that voter user
-
-    """
-
-    await app.sio.emit(
-        'validated_token', {
-            "data": 'valid',
-            "message": "This token was successfully validated"
-        }
-    )
-
-
-async def validation_of_token_failed() -> None:
-    """
-    Method for sending client a message that validation of token failed
-
-    """
-
-    await app.sio.emit(
-        'validated_token', {
-            "data": "invalid",
-            "message": "This token is not valid. Help."
-        }
-    )
+        await change_state_and_send_to_frontend(ElectionStates.TOKEN_NOT_VALID)
 
 
 async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
@@ -295,43 +300,30 @@ async def vote(
     vote: VotePartial = Body(...),
 ) -> None:
     """
-    Api method for recieving vote from client
+    Api method for recieving vote from fronend
 
     Keyword arguments:
     vote -- vote object that user created in his action
 
     """
 
+    if election_state == ElectionStates.ELECTIONS_NOT_STARTED:
+        raise HTTPException(status_code=400, detail='Election not started (1)')
+
+    if election_state != ElectionStates.TOKEN_VALID:
+        raise HTTPException(status_code=400, detail='Token not valid')
+
     try:
         await send_vote_to_gateway(vote.__dict__)
         # raise ValueError("Simulated error")
-        await app.sio.emit(
-            'actual_state', {
-                "state": 'vote_success',
-                "message": "Vote was successfully saved, sleeping 5 seconds to show success message"
-            }
-        )
+        await change_state_and_send_to_frontend(ElectionStates.VOTE_SUCCESS)
         await asyncio.sleep(5)
-        await app.sio.emit(
-            'actual_state', {
-                "state": 'start',
-                "message": "Ready to accept new vote"
-            }
-        )
+        await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
     except Exception as e:
-        await app.sio.emit(
-            'actual_state', {
-                "state": 'vote_error',
-                "message": "Vote was not saved, sleeping 10 seconds"
-            }
-        )
-        await asyncio.sleep(10)
-        await app.sio.emit(
-            'actual_state', {
-                "state": 'start',
-                "message": "Ready to accept new vote"
-            }
-        )
+        print("/api/vote_generated - exception",  e)
+        await change_state_and_send_to_frontend(ElectionStates.VOTE_ERROR)
+        await asyncio.sleep(5)
+        await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
 
     
 
@@ -394,12 +386,32 @@ async def token(
 # TESTING
 @app.get("/test_token_valid")
 async def test_token_valid():
-    await send_token_to_gateway("valid")
+    """
+    TESTING - set election state to ElectionStates.TOKEN_VALID
+    """
+    await change_state_and_send_to_frontend(ElectionStates.TOKEN_VALID)
 
 
 @app.get("/test_token_invalid")
 async def test_token_invalid():
-    await send_token_to_gateway("invalid")
+    """
+    TESTING - set election state to ElectionStates.TOKEN_NOT_VALID
+    """
+    await change_state_and_send_to_frontend(ElectionStates.TOKEN_NOT_VALID)
+
+@app.get("/test_election_start")
+async def test_election_start():
+    """
+    TESTING - set election state to ElectionStates.WAITING_FOR_NFC_TAG
+    """
+    await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
+
+@app.get("/test_election_stop")
+async def test_election_stop():
+    """
+    TESTING - set election state to ElectionStates.ELECTIONS_NOT_STARTED
+    """
+    await change_state_and_send_to_frontend(ElectionStates.ELECTIONS_NOT_STARTED)
 
 
 @app.get("/get_config_from_gateway")

@@ -18,12 +18,12 @@ const socket = io('/', {
  * Election status
  */
 export enum ElectionStatus {
-    ELECTIONS_NOT_STARTED = "inactive",
-    TOKEN_NOT_VALID = "error",
-    TOKEN_VALID = "success",
-    WAITING_FOR_NFC_TAG = "enabled",
-    VOTE_ERROR = "vote_error",
+    ELECTIONS_NOT_STARTED = "elections_not_started",
+    WAITING_FOR_NFC_TAG = "waiting_for_scan",
+    TOKEN_VALID = "token_valid",
+    TOKEN_NOT_VALID = "token_not_valid",
     VOTE_SUCCESS = "vote_success",
+    VOTE_ERROR = "vote_error",
 }
 export const electionStatus = writable(ElectionStatus.ELECTIONS_NOT_STARTED);
 electionStatus.subscribe(status => {
@@ -53,20 +53,20 @@ socket.on('connect',  () => {
 });
 
 
-
-socket.on('validated_token', msg => {
-    console.log("WS validated_token", msg);
-    if (msg.data == "valid") {
-        console.log("validated_token", msg);
-        electionStatus.set(ElectionStatus.TOKEN_VALID);
-    } else if (msg.data == "invalid") {
-        electionStatus.set(ElectionStatus.TOKEN_NOT_VALID);
-    } else {
-        console.error("WS validated_token - unknown message " + msg.data);
-        electionStatus.set(ElectionStatus.TOKEN_NOT_VALID);
-    }
-
-});
+//
+// socket.on('validated_token', msg => {
+//     console.log("WS validated_token", msg);
+//     if (msg.data == "valid") {
+//         console.log("validated_token", msg);
+//         electionStatus.set(ElectionStatus.TOKEN_VALID);
+//     } else if (msg.data == "invalid") {
+//         electionStatus.set(ElectionStatus.TOKEN_NOT_VALID);
+//     } else {
+//         console.error("WS validated_token - unknown message " + msg.data);
+//         electionStatus.set(ElectionStatus.TOKEN_NOT_VALID);
+//     }
+//
+// });
 
 /**
  * example
@@ -74,20 +74,22 @@ socket.on('validated_token', msg => {
  *    "state": state
  * }
  */
-socket.on('actual_state', msg => {
-    console.log("WS actual_state", msg);
-    if (msg.state === "end" || msg.state === "inactive") {
-        electionStatus.set(ElectionStatus.ELECTIONS_NOT_STARTED);
-    } else if (msg.state === "start") {
-        electionStatus.set(ElectionStatus.WAITING_FOR_NFC_TAG);
-    } else if (msg.state === "vote_error") {
-        electionStatus.set(ElectionStatus.VOTE_ERROR);
-    } else if (msg.state === "vote_success") {
-        electionStatus.set(ElectionStatus.VOTE_SUCCESS);
-    } else {
-        console.error("WS actual_state - unknown message " + msg.state);
-        electionStatus.set(ElectionStatus.ELECTIONS_NOT_STARTED);
+socket.on('changed_election_state', msg => {
+    switch (msg.state) {
+        case ElectionStatus.ELECTIONS_NOT_STARTED:
+        case ElectionStatus.VOTE_ERROR:
+        case ElectionStatus.VOTE_SUCCESS:
+        case ElectionStatus.TOKEN_VALID:
+        case ElectionStatus.WAITING_FOR_NFC_TAG:
+        case ElectionStatus.TOKEN_NOT_VALID:
+            electionStatus.set(msg.state);
+            break;
+        default:
+            console.error("WS actual_state - unknown message " + msg.state);
+            electionStatus.set(ElectionStatus.ELECTIONS_NOT_STARTED);
+            break;
     }
+    console.log("WS changed_election_state", msg);
 });
 
 /**
