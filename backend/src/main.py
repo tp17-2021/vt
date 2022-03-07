@@ -54,9 +54,7 @@ vt_id = None
 ###--------------
 import socketio
 
-sio = socketio.Client()
-websocket_path = 'http://host.docker.internal:8080'
-sio.connect(websocket_path, socketio_path = 'voting-process-manager-api/ws/socket.io')
+sio = socketio.AsyncClient()
 
 @sio.on('actual_state')
 async def on_actual_state_message(data):
@@ -75,9 +73,10 @@ async def on_actual_state_message(data):
     await send_current_election_state_to_client(election_state)
 
     # Emit event to gateway
-    sio.emit('vt_stauts',
+    print("emiting status", election_state)
+    await sio.emit('vt_stauts',
         {
-            'staus': election_state,
+            'status': election_state,
             'vt_id': vt_id,
             'sid': sio.sid,
         }
@@ -153,28 +152,6 @@ async def receive_config_from_gateway(file: UploadFile = File(...)) -> None:
 
         with open(config_file_path, 'wb') as f:
             f.write(r.content)
-
-
-# TODO remove this
-@app.post('/api/election/state')
-async def receive_current_election_state_from_gateway(state: dict) -> None:
-    """
-    Method for receiving current election state from gateway
-
-    Keyword arguments:
-    state -- current election state
-
-    """
-
-    global election_state
-
-    election_state = state['status']
-
-    # Download config from gateway if election just started
-    if state == START_STATE:
-        receive_config_from_gateway()
-
-    await send_current_election_state_to_client(election_state)
 
 
 async def send_current_election_state_to_client(state: dict) -> None:
@@ -365,10 +342,14 @@ async def startup_event():
         with open('/idk_data/my_id.txt', 'w') as f:
             f.write(str(my_id))
     
+
+    # connect to gateway websocket    
+    websocket_host = os.environ['VOTING_PROCESS_MANAGER_HOST']
+    await sio.connect(websocket_host, socketio_path = os.environ['VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH'])
     # Emit event to gateway
-    sio.emit('vt_stauts',
+    await sio.emit('vt_stauts',
         {
-            'staus': election_state,
+            'status': election_state,
             'vt_id': vt_id,
             'sid': sio.sid,
         }
