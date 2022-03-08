@@ -66,11 +66,7 @@ vt_id = None
 ###--------------
 import socketio
 
-sio = socketio.Client()
-# connect to gateway websocket    
-websocket_host = 'http://' + os.environ['VOTING_PROCESS_MANAGER_HOST']
-print("host",websocket_host, "path", os.environ['VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH'])
-sio.connect(websocket_host, socketio_path = os.environ['VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH'])
+sio = socketio.AsyncClient()
 
 @sio.event
 def connect():
@@ -84,17 +80,17 @@ async def on_actual_state_message(data):
     state = data['state']
 
     # save current status of voting terminal
-    election_state = 'active' if(state == START_STATE) else 'inactive'
+    election_state = ElectionStates.WAITING_FOR_NFC_TAG if(state == 'start') else ElectionStates.ELECTIONS_NOT_STARTED
 
     # Download config from gateway if election just started
-    if state == START_STATE:
+    if state == 'start':
         receive_config_from_gateway()
 
     await send_current_election_state_to_frontend(election_state)
 
     # Emit event to gateway
     print("emiting status", election_state)
-    sio.emit('vt_stauts',
+    await sio.emit('vt_stauts',
         {
             'status': election_state,
             'vt_id': vt_id,
@@ -395,9 +391,13 @@ async def startup_event():
         with open('/idk_data/my_id.txt', 'w') as f:
             f.write(str(my_id))
     
+    # connect to gateway websocket    
+    websocket_host = 'http://' + os.environ['VOTING_PROCESS_MANAGER_HOST']
+    print("host",websocket_host, "path", os.environ['VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH'])
+    await sio.connect(websocket_host, socketio_path = os.environ['VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH'])
 
     # Emit event to gateway
-    sio.emit('vt_stauts',
+    await sio.emit('vt_stauts',
         {
             'status': election_state,
             'vt_id': vt_id,
