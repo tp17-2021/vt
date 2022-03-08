@@ -16,6 +16,7 @@
         else {
             $vote.party_id = party._id;
         }
+        $vote.candidate_ids = [];
     }
 
     function next() {
