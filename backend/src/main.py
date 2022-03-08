@@ -169,6 +169,11 @@ async def change_state_and_send_to_frontend(new_state: ElectionStates) -> None:
     if new_state == ElectionStates.TOKEN_NOT_VALID and election_state == ElectionStates.ELECTIONS_NOT_STARTED:
         raise HTTPException(status_code=400, detail='Election not started (3)')
 
+    # do not change to waiting_for_scan if already is user casting to vote - fixes bug, if user scans NFC tag before waiting for NFC tag is shown
+    if new_state == ElectionStates.WAITING_FOR_NFC_TAG and election_state == ElectionStates.TOKEN_VALID:
+        return
+
+    # does the state exist in enum?
     if new_state not in [ElectionStates.ELECTIONS_NOT_STARTED, ElectionStates.WAITING_FOR_NFC_TAG, ElectionStates.TOKEN_VALID, ElectionStates.TOKEN_NOT_VALID, ElectionStates.VOTE_SUCCESS, ElectionStates.VOTE_ERROR]:
         print('Invalid state - ' + str(new_state))
         raise HTTPException(status_code=400, detail='Invalid state - ' + str(new_state))
@@ -230,6 +235,8 @@ async def send_token_to_gateway(token: str) -> None:
     if  'VT_ONLY_DEV' in os.environ and os.environ['VT_ONLY_DEV'] == '1':
         if token == 'invalid':
             await change_state_and_send_to_frontend(ElectionStates.TOKEN_NOT_VALID)
+            await asyncio.sleep(5)
+            await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
         else:
             await change_state_and_send_to_frontend(ElectionStates.TOKEN_VALID)
         return
@@ -254,6 +261,8 @@ async def send_token_to_gateway(token: str) -> None:
 
     else:
         await change_state_and_send_to_frontend(ElectionStates.TOKEN_NOT_VALID)
+        await asyncio.sleep(5)
+        await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
 
 
 async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
