@@ -66,7 +66,15 @@ vt_id = None
 ###--------------
 import socketio
 
-sio = socketio.AsyncClient()
+sio = socketio.Client()
+# connect to gateway websocket    
+websocket_host = 'http://' + os.environ['VOTING_PROCESS_MANAGER_HOST']
+print("host",websocket_host, "path", os.environ['VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH'])
+sio.connect(websocket_host, socketio_path = os.environ['VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH'])
+
+@sio.event
+def connect():
+    print("I'm connected! SID", sio.sid)
 
 @sio.on('actual_state')
 async def on_actual_state_message(data):
@@ -82,11 +90,11 @@ async def on_actual_state_message(data):
     if state == START_STATE:
         receive_config_from_gateway()
 
-    await send_current_election_state_to_client(election_state)
+    await send_current_election_state_to_frontend(election_state)
 
     # Emit event to gateway
     print("emiting status", election_state)
-    await sio.emit('vt_stauts',
+    sio.emit('vt_stauts',
         {
             'status': election_state,
             'vt_id': vt_id,
@@ -388,11 +396,8 @@ async def startup_event():
             f.write(str(my_id))
     
 
-    # connect to gateway websocket    
-    websocket_host = os.environ['VOTING_PROCESS_MANAGER_HOST']
-    await sio.connect(websocket_host, socketio_path = os.environ['VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH'])
     # Emit event to gateway
-    await sio.emit('vt_stauts',
+    sio.emit('vt_stauts',
         {
             'status': election_state,
             'vt_id': vt_id,
