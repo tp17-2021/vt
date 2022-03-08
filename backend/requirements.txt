@@ -12,3 +12,4 @@ Pillow>=9.0
 escpos
 pdf2image
 python-socketio[asyncio_client]
+asyncio
