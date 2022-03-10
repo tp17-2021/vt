@@ -63,6 +63,7 @@
 
     // --- modal ---
     let openErrorModal;
+    let openConfirmModal;
 </script>
 
 <style lang="scss">
@@ -179,9 +180,29 @@
     </div>
 </div>
 <PaginationLinks paginationObject={paginationObject} paginationObjectChanged={paginateCandidates}/>
-<Button on:click={next} type="primary">Potvrdiť</Button>
+<Button on:click={openConfirmModal} type="primary">Potvrdiť</Button>
 
 <Modal bind:openModal={openErrorModal} yesTxt="Odoslať hlas" cancelTxt="Späť">
     <span slot="title">Už ste si zvolili 5 kandidátov</span>
     <span slot="subtitle">Je možné zvoliť iba maximálne {maxCandidates} kandidátov</span>
+</Modal>
+
+<Modal bind:openModal={openConfirmModal} yesCallback={()=>next()} yesTxt="Pokračovať" cancelTxt="Upraviť">
+    <span slot="title">Zvolili ste</span>
+    {#if $vote.candidate_ids.length === 0}
+        <h1>žiadneho kandidáta, potvrdiť odoslanie prázdneho hlasu?</h1>
+    {:else}
+        <div class="modalCandidates">
+            {#each $vote.candidate_ids as candidateId}
+                <div>
+                    <div class="name">{findCandidateById(candidates, candidateId).order}. {findCandidateById(candidates, candidateId).first_name} {findCandidateById(candidates, candidateId).last_name}</div>
+                </div>
+            {/each}
+        </div>
+        {#if $vote.candidate_ids.length < maxCandidates}
+            <Warning text={"Ešte môžete zvoliť ďalších " + (maxCandidates - $vote.candidate_ids.length) + " kandidátov"}/>
+        {/if}
+        <p>Ak chcete upraviť svoju voľbu, stlačte tlačidlo upraviť</p>
+    {/if}
+
 </Modal>

@@ -8,6 +8,7 @@
     import {searchAndPaginate} from "../../lib/components/pagination/paginate";
     import PaginationLinks from "../../lib/components/pagination/PaginationLinks.svelte";
     import Warning from "../../lib/components/Warning.svelte";
+    import Modal from "../../lib/components/Modal.svelte";
 
     function chooseParty(party) {
         if (party == null) {
@@ -46,6 +47,10 @@
 
     let paginatedParties = []
     $: console.log("$vote.party_id", $vote.party_id);
+
+
+    // modals
+    let openModal
     
 </script>
 
@@ -83,4 +88,16 @@
     {/each}
 </div>
 <PaginationLinks paginationObject={paginationObject} paginationObjectChanged={paginateParties}/>
-<Button on:click={next} type="primary">Potvrdiť</Button>
+<Button on:click={openModal} type="primary">Potvrdiť</Button>
+
+{#if $vote.party_id !== null}
+    <Modal bind:openModal yesCallback={()=>next()} yesTxt="Potvrdiť" cancelTxt="Upraviť">
+        <span slot="title">Zvolili ste</span>
+        <PartyBox party={$parties.find(party => party._id === $vote.party_id)} />
+    </Modal>
+{:else}
+    <Modal bind:openModal yesCallback={()=>next()} yesTxt="Odoslať prázdny hlas" cancelTxt="Upraviť">
+        <span slot="title">Nezvolili ste žiadnu stranu</span>
+        <span slot="subtitle">Naozaj chcete odoslať prázdny hlas?</span>
+    </Modal>
+{/if}
