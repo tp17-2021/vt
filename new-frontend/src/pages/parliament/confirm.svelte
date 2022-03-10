@@ -13,7 +13,8 @@
     function confirm() {
         sendVoteParliament()
             .then(() => {
-                $goto("/parliament/success");
+                // will be sent as a WS message from the server
+                // $goto("/parliament/success");
             })
             .catch(() => {
                 $goto("/parliament/error");

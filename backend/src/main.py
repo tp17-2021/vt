@@ -170,8 +170,8 @@ async def change_state_and_send_to_frontend(new_state: ElectionStates) -> None:
         raise HTTPException(status_code=400, detail='Election not started (3)')
 
     # do not change to waiting_for_scan if already is user casting to vote - fixes bug, if user scans NFC tag before waiting for NFC tag is shown
-    if new_state == ElectionStates.WAITING_FOR_NFC_TAG and election_state == ElectionStates.TOKEN_VALID:
-        return
+    # if new_state == ElectionStates.WAITING_FOR_NFC_TAG and election_state == ElectionStates.TOKEN_VALID:
+    #     return
 
     # does the state exist in enum?
     if new_state not in [ElectionStates.ELECTIONS_NOT_STARTED, ElectionStates.WAITING_FOR_NFC_TAG, ElectionStates.TOKEN_VALID, ElectionStates.TOKEN_NOT_VALID, ElectionStates.VOTE_SUCCESS, ElectionStates.VOTE_ERROR]:
@@ -236,7 +236,8 @@ async def send_token_to_gateway(token: str) -> None:
         if token == 'invalid':
             await change_state_and_send_to_frontend(ElectionStates.TOKEN_NOT_VALID)
             await asyncio.sleep(5)
-            await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
+            if election_state == ElectionStates.TOKEN_NOT_VALID:
+                await change_state_and_send_to_frontend(ElectionStates.ELECTIONS_NOT_STARTED)
         else:
             await change_state_and_send_to_frontend(ElectionStates.TOKEN_VALID)
         return
@@ -262,8 +263,9 @@ async def send_token_to_gateway(token: str) -> None:
     else:
         await change_state_and_send_to_frontend(ElectionStates.TOKEN_NOT_VALID)
         await asyncio.sleep(5)
-        await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
-
+        if election_state == ElectionStates.TOKEN_NOT_VALID:
+            await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
+            
 
 async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
     """
@@ -327,12 +329,14 @@ async def vote(
         # raise ValueError("Simulated error")
         await change_state_and_send_to_frontend(ElectionStates.VOTE_SUCCESS)
         await asyncio.sleep(5)
-        await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
+        if election_state == ElectionStates.VOTE_SUCCESS:
+            await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
     except Exception as e:
         print("/api/vote_generated - exception",  e)
         await change_state_and_send_to_frontend(ElectionStates.VOTE_ERROR)
         await asyncio.sleep(5)
-        await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
+        if election_state == ElectionStates.VOTE_ERROR:
+            await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
 
     
 
