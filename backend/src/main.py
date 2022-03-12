@@ -402,6 +402,12 @@ async def test_token_valid():
     """
     TESTING - set election state to ElectionStates.TOKEN_VALID
     """
+
+    global __validated_token
+
+    r = requests.post("http://" + os.environ['TOKEN_MANAGER_API_PATH'] + "/tokens/create")
+    __validated_token = r.json()["token"]
+
     await change_state_and_send_to_frontend(ElectionStates.TOKEN_VALID)
 
 
