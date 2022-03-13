@@ -63,7 +63,7 @@ election_state = 'inactive'
 vt_id = None
 
 
-###--------------
+### ----gateway websocket----
 import socketio
 
 sio = socketio.AsyncClient(
@@ -87,23 +87,10 @@ async def on_actual_state_message(data):
     # save current status of voting terminal
     election_state = ElectionStates.WAITING_FOR_NFC_TAG if(state == 'start') else ElectionStates.ELECTIONS_NOT_STARTED
 
-    # Download config from gateway if election just started
-    if state == 'start':
-        await receive_config_from_gateway()
+    await change_state_and_send_to_frontend(election_state)
+    await send_current_election_state_to_gateway()
 
-    await send_current_election_state_to_frontend()
-
-    # Emit event to gateway
-    print("emiting status", election_state)
-    await sio.emit('vt_stauts',
-        {
-            'status': election_state,
-            'vt_id': vt_id,
-            'sid': sio.sid,
-        }
-    )
-
-###-------------
+### ----gateway websocket----
 
 election_state = ElectionStates.ELECTIONS_NOT_STARTED
 
@@ -196,6 +183,24 @@ async def send_current_election_state_to_frontend() -> None:
     await app.sio.emit(
         'changed_election_state', {
             "state": election_state
+        }
+    )
+
+async def send_current_election_state_to_gateway() -> None:
+    """
+    Method for sending election state to gateway
+
+    """
+
+    global election_state, vt_id
+
+    # Emit event to gateway
+    print("emiting status", election_state)
+    await sio.emit('vt_stauts',
+        {
+            'status': election_state,
+            'vt_id': vt_id,
+            'sid': sio.sid,
         }
     )
 
@@ -405,14 +410,7 @@ async def startup_event():
         transports=['polling']
     )
 
-    # Emit event to gateway
-    await sio.emit('vt_stauts',
-        {
-            'status': election_state,
-            'vt_id': vt_id,
-            'sid': sio.sid,
-        }
-    )
+    await send_current_election_state_to_gateway()
 
 
 
