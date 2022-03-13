@@ -66,7 +66,12 @@ vt_id = None
 ###--------------
 import socketio
 
-sio = socketio.AsyncClient()
+sio = socketio.AsyncClient(
+    reconnection=True,
+    reconnection_attempts=3,
+    logger=True,
+    engineio_logger=True
+)
 
 @sio.event
 def connect():
@@ -84,9 +89,9 @@ async def on_actual_state_message(data):
 
     # Download config from gateway if election just started
     if state == 'start':
-        receive_config_from_gateway()
+        await receive_config_from_gateway()
 
-    await send_current_election_state_to_frontend(election_state)
+    await send_current_election_state_to_frontend()
 
     # Emit event to gateway
     print("emiting status", election_state)
@@ -153,7 +158,7 @@ async def print_vote(vote: dict) -> None:
 
     
 
-async def receive_config_from_gateway(file: UploadFile = File(...)) -> None:
+async def receive_config_from_gateway() -> None:
     """
     Method for receiving election config from gateway
 
@@ -208,7 +213,7 @@ def encrypt_message(data: dict):
     return encrypted_data
   
 
-async def change_state_and_send_to_frontend(new_state: ElectionStates) -> None:
+async def change_state_and_send_to_frontend(new_state: str) -> None:
     """
     Method for changing election state and sending it to client
     """
@@ -233,7 +238,7 @@ async def change_state_and_send_to_frontend(new_state: ElectionStates) -> None:
     
     # Download config from gateway if election just started
     if new_state == ElectionStates.WAITING_FOR_NFC_TAG and election_state == ElectionStates.ELECTIONS_NOT_STARTED:
-        receive_config_from_gateway()
+        await receive_config_from_gateway()
 
     print("Changed state to:", new_state)
     election_state = new_state
@@ -394,7 +399,11 @@ async def startup_event():
     # connect to gateway websocket    
     websocket_host = 'http://' + os.environ['VOTING_PROCESS_MANAGER_HOST']
     print("host",websocket_host, "path", os.environ['VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH'])
-    await sio.connect(websocket_host, socketio_path = os.environ['VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH'])
+    await sio.connect(
+        websocket_host,
+        socketio_path = os.environ['VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH'],
+        transports=['polling']
+    )
 
     # Emit event to gateway
     await sio.emit('vt_stauts',
