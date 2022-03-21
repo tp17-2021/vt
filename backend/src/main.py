@@ -59,10 +59,40 @@ socket_manager = SocketManager(app=app)
 
 __validated_token = "valid"
 election_config = None
+election_state = 'inactive'
+vt_id = None
+
+
+### ----gateway websocket----
+import socketio
+
+sio = socketio.AsyncClient(
+    reconnection=True,
+    reconnection_attempts=3,
+    logger=True,
+    engineio_logger=True
+)
+
+@sio.event
+def connect():
+    print("I'm connected! SID", sio.sid)
+
+@sio.on('actual_state')
+async def on_actual_state_message(data):
+    global election_state
+
+    print('recieved actual_state!', data)
+    state = data['state']
+
+    # save current status of voting terminal
+    election_state = ElectionStates.WAITING_FOR_NFC_TAG if(state == 'start') else ElectionStates.ELECTIONS_NOT_STARTED
+
+    await change_state_and_send_to_frontend(election_state)
+    await send_current_election_state_to_gateway()
+
+### ----gateway websocket----
+
 election_state = ElectionStates.ELECTIONS_NOT_STARTED
-
-
-
 
 
 @app.sio.on('join')
@@ -115,7 +145,7 @@ async def print_vote(vote: dict) -> None:
 
     
 
-async def receive_config_from_gateway(file: UploadFile = File(...)) -> None:
+async def receive_config_from_gateway() -> None:
     """
     Method for receiving election config from gateway
 
@@ -138,21 +168,57 @@ async def receive_config_from_gateway(file: UploadFile = File(...)) -> None:
             f.write(r.content)
 
 
-@app.post('/api/election/state')
-async def receive_current_election_state_from_gateway(state: dict) -> None:
+
+async def send_current_election_state_to_frontend() -> None:
     """
-    Method for receiving current election state from gateway
+    Method for sending election config to client
 
     Keyword arguments:
-    state -- current election state
+    config -- election config
 
     """
-    print("-------------------", state['status'])
-    await change_state_and_send_to_frontend(state['status'])
 
-    
+    global election_state
 
-async def change_state_and_send_to_frontend(new_state: ElectionStates) -> None:
+    await app.sio.emit(
+        'changed_election_state', {
+            "state": election_state
+        }
+    )
+
+async def send_current_election_state_to_gateway() -> None:
+    """
+    Method for sending election state to gateway
+
+    """
+
+    global election_state, vt_id
+
+    # Emit event to gateway
+    print("emiting status", election_state)
+    await sio.emit('vt_stauts',
+        {
+            'status': election_state,
+            'vt_id': vt_id,
+            'sid': sio.sid,
+        }
+    )
+
+
+def encrypt_message(data: dict):
+    with open('/secret/private_key.txt', 'r') as f:
+        my_private_key = f.read()
+
+    with open('/idk_data/g_public_key.txt', 'r') as f:
+        g_public_key = f.read()
+
+
+    encrypted_data = electiersa.encrypt_vote(data, my_private_key, g_public_key)
+
+    return encrypted_data
+  
+
+async def change_state_and_send_to_frontend(new_state: str) -> None:
     """
     Method for changing election state and sending it to client
     """
@@ -182,43 +248,12 @@ async def change_state_and_send_to_frontend(new_state: ElectionStates) -> None:
     
     # Download config from gateway if election just started
     if new_state == ElectionStates.WAITING_FOR_NFC_TAG and election_state == ElectionStates.ELECTIONS_NOT_STARTED:
-        receive_config_from_gateway()
+        await receive_config_from_gateway()
 
     print("Changed state to:", new_state)
     election_state = new_state
 
     await send_current_election_state_to_frontend()
-
-
-async def send_current_election_state_to_frontend() -> None:
-    """
-    Method for sending election config to client
-
-    Keyword arguments:
-    config -- election config
-
-    """
-
-    global election_state
-
-    await app.sio.emit(
-        'changed_election_state', {
-            "state": election_state
-        }
-    )
-
-
-def encrypt_message(data: dict):
-    with open('/secret/private_key.txt', 'r') as f:
-        my_private_key = f.read()
-
-    with open('/idk_data/g_public_key.txt', 'r') as f:
-        g_public_key = f.read()
-
-
-    encrypted_data = electiersa.encrypt_vote(data, my_private_key, g_public_key)
-
-    return encrypted_data
 
 
 async def send_token_to_gateway(token: str) -> None:
@@ -346,6 +381,8 @@ async def vote(
 @app.on_event("startup")
 async def startup_event():
     """ Method that connect to gateway at start of running VT """
+    global vt_id
+
     private_key, public_key = electiersa.get_rsa_key_pair()
     with open('/secret/private_key.txt', 'w') as f:
         f.write(private_key)
@@ -369,13 +406,25 @@ async def startup_event():
             raise Exception("Not connected to gateway !!!")
 
         g_public_key = r.json()['gateway_public_key']
-        my_id = r.json()['new_id']
+        vt_id = my_id = r.json()['new_id']
 
         with open('/idk_data/g_public_key.txt', 'w') as f:
             f.write(g_public_key)
 
         with open('/idk_data/my_id.txt', 'w') as f:
             f.write(str(my_id))
+    
+    # connect to gateway websocket    
+    websocket_host = 'http://' + os.environ['VOTING_PROCESS_MANAGER_HOST']
+    print("host",websocket_host, "path", os.environ['VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH'])
+    await sio.connect(
+        websocket_host,
+        socketio_path = os.environ['VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH'],
+        transports=['polling']
+    )
+
+    await send_current_election_state_to_gateway()
+
 
 
 # post method for recieving token from client
@@ -436,6 +485,19 @@ async def test_election_stop():
 @app.get("/get_config_from_gateway")
 async def test_getting_config():
     await receive_config_from_gateway()
+
+    
+@app.post('/api/election/state')
+async def receive_current_election_state_from_gateway(state: dict) -> None:
+    """
+    Method for receiving current election state from gateway
+
+    Keyword arguments:
+    state -- current election state
+
+    """
+    print("-------------------", state['status'])
+    await change_state_and_send_to_frontend(state['status'])
 
 
 
