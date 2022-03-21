@@ -225,9 +225,9 @@ async def change_state_and_send_to_frontend(new_state: str) -> None:
 
     global election_state
     
-    # continue only if state was changed
-    if new_state == election_state:
-        return
+    # # continue only if state was changed
+    # if new_state == election_state:
+    #     return
 
     if new_state == ElectionStates.TOKEN_VALID and election_state == ElectionStates.ELECTIONS_NOT_STARTED:
         raise HTTPException(status_code=400, detail='Election not started (2)')
