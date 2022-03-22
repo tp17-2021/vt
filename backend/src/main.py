@@ -79,15 +79,10 @@ def connect():
 
 @sio.on('actual_state')
 async def on_actual_state_message(data):
-    global election_state
-
     print('recieved actual_state!', data)
     state = data['state']
 
-    # save current status of voting terminal
-    election_state = ElectionStates.WAITING_FOR_NFC_TAG if(state == 'start') else ElectionStates.ELECTIONS_NOT_STARTED
-
-    await change_state_and_send_to_frontend(election_state)
+    await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG if(state == 'start') else ElectionStates.ELECTIONS_NOT_STARTED)
     await send_current_election_state_to_gateway()
 
 ### ----gateway websocket----
@@ -143,21 +138,21 @@ async def print_vote(vote: dict) -> None:
     except Exception as e:
         print('Print failed:', e)
 
-    
+
 
 async def receive_config_from_gateway() -> None:
     """
     Method for receiving election config from gateway
 
     """
-    
+
     config_file_path = os.path.join(os.getcwd(), './src/public/config.json')
-    
+
     # use local config.json while in dev mode
     if  'VT_ONLY_DEV' in os.environ and os.environ['VT_ONLY_DEV'] == '1':
         with open(config_file_path, 'wb') as f, open('/code/tests/config.json', 'rb') as f2:
-            f.write(f2.read())        
-    
+            f.write(f2.read())
+
     else:
         r = requests.get(
             "http://" + os.environ['STATE_VECTOR_PATH'] + "/config/config.json",
@@ -216,7 +211,7 @@ def encrypt_message(data: dict):
     encrypted_data = electiersa.encrypt_vote(data, my_private_key, g_public_key)
 
     return encrypted_data
-  
+
 
 async def change_state_and_send_to_frontend(new_state: str) -> None:
     """
@@ -224,10 +219,10 @@ async def change_state_and_send_to_frontend(new_state: str) -> None:
     """
 
     global election_state
-    
+
     # # continue only if state was changed
-    # if new_state == election_state:
-    #     return
+    if new_state == election_state:
+        return
 
     if new_state == ElectionStates.TOKEN_VALID and election_state == ElectionStates.ELECTIONS_NOT_STARTED:
         raise HTTPException(status_code=400, detail='Election not started (2)')
@@ -244,8 +239,8 @@ async def change_state_and_send_to_frontend(new_state: str) -> None:
         print('Invalid state - ' + str(new_state))
         raise HTTPException(status_code=400, detail='Invalid state - ' + str(new_state))
 
-    
-    
+
+
     # Download config from gateway if election just started
     if new_state == ElectionStates.WAITING_FOR_NFC_TAG and election_state == ElectionStates.ELECTIONS_NOT_STARTED:
         await receive_config_from_gateway()
@@ -265,7 +260,7 @@ async def send_token_to_gateway(token: str) -> None:
 
     """
     global __validated_token
-    
+
     # dont valid token on G while dev mode
     if  'VT_ONLY_DEV' in os.environ and os.environ['VT_ONLY_DEV'] == '1':
         if token == 'invalid':
@@ -300,7 +295,7 @@ async def send_token_to_gateway(token: str) -> None:
         await asyncio.sleep(5)
         if election_state == ElectionStates.TOKEN_NOT_VALID:
             await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
-            
+
 
 async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
     """
@@ -373,9 +368,9 @@ async def vote(
         if election_state == ElectionStates.VOTE_ERROR:
             await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
 
-    
 
-    
+
+
 
 
 @app.on_event("startup")
@@ -393,7 +388,7 @@ async def startup_event():
 
         with open('/idk_data/my_id.txt', 'w') as f:
             f.write(str('vtdev1'))
-        
+
     else:
         r = requests.post(
             "http://" + os.environ['VOTING_PROCESS_MANAGER_PATH'] + '/register-vt',
@@ -413,8 +408,8 @@ async def startup_event():
 
         with open('/idk_data/my_id.txt', 'w') as f:
             f.write(str(my_id))
-    
-    # connect to gateway websocket    
+
+    # connect to gateway websocket
     websocket_host = 'http://' + os.environ['VOTING_PROCESS_MANAGER_HOST']
     print("host",websocket_host, "path", os.environ['VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH'])
     await sio.connect(
@@ -450,13 +445,8 @@ async def token(
 async def test_token_valid():
     """
     TESTING - set election state to ElectionStates.TOKEN_VALID
+    Used for testing purposes to unlock frontend
     """
-
-    global __validated_token
-
-    r = requests.post("http://" + os.environ['TOKEN_MANAGER_API_PATH'] + "/tokens/create")
-    __validated_token = r.json()["token"]
-
     await change_state_and_send_to_frontend(ElectionStates.TOKEN_VALID)
 
 
@@ -464,6 +454,7 @@ async def test_token_valid():
 async def test_token_invalid():
     """
     TESTING - set election state to ElectionStates.TOKEN_NOT_VALID
+    Used for testing purposes to lock frontend
     """
     await change_state_and_send_to_frontend(ElectionStates.TOKEN_NOT_VALID)
 
@@ -486,7 +477,7 @@ async def test_election_stop():
 async def test_getting_config():
     await receive_config_from_gateway()
 
-    
+
 @app.post('/api/election/state')
 async def receive_current_election_state_from_gateway(state: dict) -> None:
     """
