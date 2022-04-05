@@ -3,6 +3,7 @@ from enum import Enum
 import logging
 import os
 import sys
+import time
 
 from fastapi import Body, FastAPI, status, HTTPException, File, UploadFile
 from fastapi.responses import HTMLResponse, FileResponse
@@ -398,7 +399,23 @@ async def startup_event():
         )
 
         if r.status_code != 200:
-            raise Exception("Not connected to gateway !!!")
+            try:
+                print('Error message:', r.json()['detail'])
+
+                if r.json()['detail'] == 'Registration is disabled':
+                    print("Can't register to gateway yet, sleeping for 5 seconds...")
+                    time.sleep(5)
+                    print('Stopping.')
+
+                    sys.exit(1)
+
+            except KeyError as e:
+                print('This is NOT a register allowance related error')
+                print('Response:', r.status_code, r.text)
+                print('Stopping.')
+
+                sys.exit(1)
+
 
         g_public_key = r.json()['gateway_public_key']
         vt_id = my_id = r.json()['new_id']
