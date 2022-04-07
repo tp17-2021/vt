@@ -3,10 +3,12 @@ FROM python:3.10-alpine as base
 WORKDIR /code
 
 RUN apk update
+
 RUN apk add -U gcc g++ bash
 RUN apk add jpeg-dev zlib-dev libjpeg
 RUN apk add --upgrade poppler
 RUN apk add --upgrade poppler-utils
+RUN apk add --upgrade cups-dev
 
 COPY ./requirements.txt ./code/requirements.txt
 RUN pip3 install --upgrade pip
@@ -21,6 +23,21 @@ RUN mkdir /idk_data
 COPY ./tests /code/tests
 COPY ./src /code/src
 
+COPY ./src/printer_driver /code/printer_driver
+
+RUN apk add cups cups-libs cups-client cups-filters openrc
+
+RUN apk add cmake
+RUN apk add make
+WORKDIR /code/printer_driver
+RUN ./build.sh
+RUN ./install.sh
+
+RUN ./ppd/reg.sh
+RUN rc-service cupsd restart
+# RUN ./ppd/aa.sh
+
+WORKDIR /code
 
 FROM base as test
 
@@ -35,3 +52,6 @@ FROM base as build
 COPY ./start.sh ./start.sh
 RUN chmod 700 ./start.sh
 CMD [ "bash", "start.sh" ]
+
+
+

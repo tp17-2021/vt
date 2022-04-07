@@ -1,3 +1,5 @@
+
+
 if [ "$VT_ONLY_DEV" == "1" ]
 then
     # generate python class from local test file

@@ -14,8 +14,10 @@ services:
       - STATE_VECTOR_PATH=host.docker.internal:8080/statevector
       - VOTING_PROCESS_MANAGER_PATH=host.docker.internal:8080/voting-process-manager-api
       - VT_ONLY_DEV=1
+    ports:
+      - "631:631"
     stdin_open: true # docker run -i
-    tty: true        # docker run -t
+    tty: true # docker run -t
 
   vt:
     build:
@@ -32,7 +34,7 @@ services:
       dockerfile: ./Dockerfile
     restart: unless-stopped
     devices:
-    - /dev/usb/bus:/dev/usb/bus
+      - /dev/usb/bus:/dev/usb/bus
     privileged: true
     environment:
       - TOKEN_URL=vt-backend/token

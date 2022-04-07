@@ -1,6 +1,9 @@
 import logging
 import os
 import sys
+import json
+import time
+import subprocess
 
 from fastapi import Body, FastAPI, status, HTTPException, File, UploadFile
 from fastapi.responses import HTMLResponse, FileResponse
@@ -28,6 +31,7 @@ app = FastAPI(root_path=os.environ['ROOT_PATH'])
 LOGGER = logging.getLogger(__name__)
 
 START_STATE = 'start'
+config_file_path = os.path.join(os.getcwd(), './src/public/config.json')
 
 app.mount("/public", StaticFiles(directory="src/public"), name="public")
 
@@ -48,6 +52,7 @@ socket_manager = SocketManager(app=app)
 __validated_token = "valid"
 election_config = None
 election_state = 'inactive'
+registered_printer = False
 
 @app.get('/')
 async def hello ():
@@ -100,8 +105,7 @@ async def receive_config_from_gateway(file: UploadFile = File(...)) -> None:
     Method for receiving election config from gateway
 
     """
-    
-    config_file_path = os.path.join(os.getcwd(), './src/public/config.json')
+    global config_file_path
     
     # use local config.json while in dev mode
     if  'VT_ONLY_DEV' in os.environ and os.environ['VT_ONLY_DEV'] == '1':
@@ -116,6 +120,7 @@ async def receive_config_from_gateway(file: UploadFile = File(...)) -> None:
 
         with open(config_file_path, 'wb') as f:
             f.write(r.content)
+    
 
 
 @app.post('/api/election/state')
@@ -236,6 +241,28 @@ async def validation_of_token_failed() -> None:
         }
     )
 
+async def transform_vote_to_print(vote: dict) -> dict:
+
+    with open(config_file_path, 'rb') as f:
+        data = json.load(f)
+        res_dict = {}
+        res_dict['title'] = "Voľby do národnej rady"
+        res_dict["candidates"] = []
+
+        for party in data["parties"]:
+            if party["party_number"] == vote["party_id"]:
+                res_dict["party"] = party["name"]
+
+                # print(party["candidates"])
+                for i,candidate in enumerate(party["candidates"]):
+                    # id_in_sequence = i+1 
+                    if candidate["order"] in vote["candidate_ids"]:
+                        name = str(candidate["order"]) +". "+ candidate["first_name"] +" "+ candidate["last_name"]
+                        res_dict["candidates"].append(name)
+
+    
+    print(res_dict)
+    return res_dict
 
 async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
     """
@@ -246,9 +273,25 @@ async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
     vote -- vote object that user created in his action
 
     """
-
+    global registered_printer
     # skip while on dev mode
     if  'VT_ONLY_DEV' in os.environ and os.environ['VT_ONLY_DEV'] == '1':
+
+        token = get_validated_token()
+        print_vote_ = await transform_vote_to_print(vote)
+        printing_data = {
+            'token': token,
+            'vote': print_vote_
+        }
+        await print_vote(printing_data)
+
+        if registered_printer == False:
+            await register_printer()
+            registered_printer = True
+        
+
+        await print_ticket_out()
+
         return
 
     token = get_validated_token()
@@ -258,7 +301,12 @@ async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
         'vote': vote
     }
 
-    await print_vote(vote)
+    print_vote_ = await transform_vote_to_print(vote)
+    printing_data = {
+        'token': token,
+        'vote': print_vote_
+    }
+    await print_vote(printing_data)
 
     encrypted_data = encrypt_message(data)
 
@@ -347,6 +395,7 @@ async def token(
 # TESTING
 @app.get("/test_token_valid")
 async def test_token_valid():
+
     await send_token_to_gateway("valid")
 
 
@@ -357,28 +406,31 @@ async def test_token_invalid():
 
 @app.get("/get_config_from_gateway")
 async def test_getting_config():
+
+    
     await receive_config_from_gateway()
 
+@app.get("/get_register_printer")
+async def register_printer():
+    print('SOM TUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU')
+    os.system('rc-service cupsd restart')
 
+    time.sleep(2)
 
-@app.get("/test_print")
-async def test_print():
-    data = {}
-    data['title'] = "Volby do narodnej rady"
-    data["party"] = "Smer - socialna demokracia"
-    data["candidates"] = [
-        '1. Marek Ceľuch',
-        '2. Matúš StaŠ',
-        '3. Lucia Janikova',
-        '4. Lilbor Duda',
-        '5. Denis Klenovic',
-        '6. Timotej Kralik',
-        '7. Jaro Erdelyi',
-        '8. Voldemort Voldemort',
-        '9. Neviem Neviem',
-        ]
+    os.system('lpadmin -p TM- -v socket://192.168.192.168/TM- -P /code/printer_driver/ppd/tm-ba-thermal-rastertotmtr-203.ppd -E')
 
-    await print_vote(data)
+    os.system('lpstat -t')
+
+    
+@app.get("/get_print_ticket")
+async def print_ticket_out():
+#     os.system('lpstat -t')
+    
+#     os.system('ls /code/src/PDF_creator/' )
+#     os.system('')
+
+    command = "lpr -o TmxPaperCut=CutPerJob -P TM- /code/src/PDF_creator/NewTicket.pdf"
+    subprocess.run(command, shell=True, check=True)
 
 if __name__ == '__main__':
     uvicorn.run('main:app', host='127.0.0.1', port=80)
