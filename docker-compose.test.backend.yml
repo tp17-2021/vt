@@ -13,14 +13,6 @@ services:
       - ROOT_PATH=/backend
       - VOTING_SERVICE_PATH=host.docker.internal:8080/voting-service-api
       - STATE_VECTOR_PATH=host.docker.internal:8080/statevector
+      - VOTING_PROCESS_MANAGER_HOST=host.docker.internal:8080
+      - VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH=voting-process-manager-api/ws/socket.io
       - VT_ONLY_DEV=1
-
-  # frontend not needed for backend testing for now
-  # vt:
-  #   build:
-  #     context: ./
-  #     dockerfile: ./frontend/Dockerfile
-  #   depends_on:
-  #     - vt-backend
-  #   ports:
-  #     - "81:80"
