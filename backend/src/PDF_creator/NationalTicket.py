@@ -2,8 +2,6 @@ from fpdf import FPDF
 import qrcode
 from PIL import Image
 import os
-import subprocess
-
 
 from src.PDF_creator.BaseTicket import BaseTicket
 
@@ -40,11 +38,11 @@ class NationalTicket(BaseTicket):
         pdf.set_font('slovak', '', 9)
         pdf.multi_cell(0,0,self.voting_data['title'],align='C')
 
-        pdf.set_xy(0,10)
+        pdf.set_xy(3,10)
         pdf.set_font('slovakBold','',9)
         pdf.write(5,'Strana:')
 
-        pdf.set_xy(0,15)
+        pdf.set_xy(3,15)
         pdf.set_font('slovak',"", 9)
         party_str = BaseTicket.preprocessText(
             self,
@@ -53,11 +51,11 @@ class NationalTicket(BaseTicket):
         )
         pdf.multi_cell(0,2,party_str)
 
-        pdf.set_xy(0,22)
+        pdf.set_xy(3,22)
         pdf.set_font('slovakBold','',9)
         pdf.write(5,'Kandidáti:')
 
-        pdf.set_xy(0,27)
+        pdf.set_xy(3,27)
         pdf.set_font('slovak','', 9)
         candidates = BaseTicket.preprocessText(
             self,
@@ -68,10 +66,10 @@ class NationalTicket(BaseTicket):
 
         pdf.set_xy(43,22)
 
-        data_str = str(self.voting_data_token)
+        data_str = str(self.voting_data)
         img = qrcode.make(data_str)
         img.save("Temp/sample.png")
-        pdf.image("Temp/sample.png",w=30,h=30)
+        pdf.image("Temp/sample.png",w=35,h=35)
+        pdf.output('NationalPrincipalTIcket.pdf', 'F')
 
-        print("********************")
-        pdf.output('NewTicket.pdf', 'F')
+        self.print_ticket('NationalPrincipalTIcket.pdf')
