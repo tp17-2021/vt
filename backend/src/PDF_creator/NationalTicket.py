@@ -70,7 +70,7 @@ class NationalTicket(BaseTicket):
         data_str = str(self.voting_data_token)
         img = qrcode.make(data_str)
         img.save("Temp/sample.png")
-        pdf.image("Temp/sample.png",w=35,h=35)
-        pdf.output('NationalPrincipalTIcket.pdf', 'F')
+        pdf.image("Temp/sample.png",w=30,h=30)
 
-        self.print_ticket('NationalPrincipalTIcket.pdf')
+        print('*************')
+        pdf.output('NewTicket.pdf', 'F')

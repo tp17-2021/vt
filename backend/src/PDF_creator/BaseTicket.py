@@ -1,3 +1,4 @@
+import os
 import qrcode
 from fpdf import FPDF
 from PIL import Image
@@ -29,7 +30,7 @@ class BaseTicket(object):
         for i in range(len(images)):
             images[i].save('ticket.jpg', 'JPEG')
 
-        printer = Network("192.168.192.168")
+        printer = Network(os.environ['PRINTER_IP_ADDRESS'])
         printer.image('ticket.jpg')
         printer.cut()
 
