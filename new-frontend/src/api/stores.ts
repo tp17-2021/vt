@@ -52,8 +52,10 @@ export interface Iparty {
     _id: number;
     party_number: number;
     name: string;
-    abbreviation: string;
+    official_abbr: string;
     image: string;
+    color: string;
+    abbr: string;
     image_bytes: string;
     candidates: Icandidate[];
 }

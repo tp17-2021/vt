@@ -121,12 +121,12 @@ async def print_vote(vote: dict) -> None:
 
     """
 
-    try:
-        ticket = NationalTicket(vote)
-        ticket.create_pdf()
+    # try:
+    ticket = NationalTicket(vote)
+    ticket.create_pdf()
 
-    except Exception as e:
-        print('Print failed:', e)
+    # except Exception as e:
+    #     print('Print failed:', e)
 
 
 
@@ -296,15 +296,16 @@ async def transform_vote_to_print(vote: dict) -> dict:
     res_dict = {}
     res_dict['title'] = "Voľby do národnej rady"
     res_dict["candidates"] = []
+    res_dict["party"] = "---"
 
     for party in data["parties"]:
-        if party["party_number"] == vote["party_id"]:
+        if party["_id"] == vote["party_id"]:
             res_dict["party"] = party["name"]
 
             # print(party["candidates"])
-            for i,candidate in enumerate(party["candidates"]):
+            for candidate in party["candidates"]:
                 # id_in_sequence = i+1 
-                if candidate["order"] in vote["candidate_ids"]:
+                if candidate["_id"] in vote["candidate_ids"]:
                     name = str(candidate["order"]) +". "+ candidate["first_name"] +" "+ candidate["last_name"]
                     res_dict["candidates"].append(name)
 
