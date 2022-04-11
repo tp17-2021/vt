@@ -3,7 +3,9 @@ from enum import Enum
 import logging
 import os
 import sys
+import json
 import time
+import subprocess
 
 from fastapi import Body, FastAPI, status, HTTPException, File, UploadFile
 from fastapi.responses import HTMLResponse, FileResponse
@@ -47,6 +49,7 @@ __validated_token = "valid"
 election_config = None
 election_state = 'inactive'
 vt_id = None
+registered_printer = False
 
 
 ### ----gateway websocket----
@@ -323,6 +326,7 @@ async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
     vote -- vote object that user created in his action
 
     """
+    global registered_printer
 
     # skip while on dev mode
 
@@ -350,7 +354,12 @@ async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
         'vote': vote
     }
 
-    await print_vote(vote)
+    print_vote_ = await transform_vote_to_print(vote)
+    printing_data = {
+        'token': token,
+        'vote': print_vote_
+    }
+    await print_vote(printing_data)
 
     await print_ticket_out()
 
