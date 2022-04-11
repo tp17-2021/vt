@@ -29,20 +29,7 @@ from src.schemas.votes import VotePartial
 
 
 app = FastAPI(root_path=os.environ['ROOT_PATH'])
-
 app.mount("/public", StaticFiles(directory="src/public"), name="public")
-
-# origins = ["http://localhost:8079/", "http://localhost:5000/"]
-
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=origins,
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
-
-# host.docker.internal  - toto odoslne na cely pocitac a nie dockerovsky
 
 
 # enum for election_states
@@ -426,7 +413,7 @@ async def vote(
 @app.on_event("startup")
 async def startup_event():
     """ Method that connect to gateway at start of running VT """
-    global vt_id
+    global vt_id, election_state
 
     private_key, public_key = electiersa.get_rsa_key_pair()
     with open('/secret/private_key.txt', 'w') as f:
@@ -438,6 +425,8 @@ async def startup_event():
 
         with open('/idk_data/my_id.txt', 'w') as f:
             f.write(str('vtdev1'))
+            
+        election_state = ElectionStates.WAITING_FOR_NFC_TAG
 
     else:
         r = requests.post(
@@ -475,14 +464,14 @@ async def startup_event():
         with open('/idk_data/my_id.txt', 'w') as f:
             f.write(str(my_id))
 
-    # connect to gateway websocket
-    websocket_host = 'http://' + os.environ['VOTING_PROCESS_MANAGER_HOST']
-    print("host",websocket_host, "path", os.environ['VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH'])
-    await sio.connect(
-        websocket_host,
-        socketio_path = os.environ['VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH'],
-        transports=['polling']
-    )
+        # connect to gateway websocket
+        websocket_host = 'http://' + os.environ['VOTING_PROCESS_MANAGER_HOST']
+        print("host",websocket_host, "path", os.environ['VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH'])
+        await sio.connect(
+            websocket_host,
+            socketio_path = os.environ['VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH'],
+            transports=['polling']
+        )
 
     await send_current_election_state_to_gateway()
 
@@ -502,6 +491,47 @@ async def token(
     """
 
     await send_token_to_gateway(token)
+
+
+
+
+@app.get("/get_config_from_gateway")
+async def test_getting_config():
+
+    
+    await receive_config_from_gateway()
+
+@app.get("/get_register_printer")
+async def register_printer():
+    print('SOM TUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU')
+    os.system('rc-service cupsd restart')
+
+    time.sleep(2)
+
+    os.system(f'lpadmin -p TM- -v socket://{os.environ["PRINTER_IP_ADDRESS"]}/TM- -P /code/printer_driver/ppd/tm-ba-thermal-rastertotmtr-203.ppd -E')
+
+@app.post('/api/election/state')
+async def receive_current_election_state_from_gateway(state: dict) -> None:
+    """
+    Method for receiving current election state from gateway
+
+    Keyword arguments:
+    state -- current election state
+
+    """
+    print("-------------------", state['status'])
+    await change_state_and_send_to_frontend(state['status'])
+
+
+
+    
+@app.get("/get_print_ticket")
+async def print_ticket_out():
+    print('------------------------------ TU ---------------------------')
+    command = "lpr -o TmxPaperCut=CutPerJob -P TM- /code/src/PDF_creator/NewTicket.pdf"
+    subprocess.run(command, shell=True, check=True)
+    print('------------------------------ TU2 ---------------------------')
+
 
 
 # This is for future usage, please keep it here, in final code, this won't be here :)
@@ -538,43 +568,6 @@ async def test_election_stop():
     """
     await change_state_and_send_to_frontend(ElectionStates.ELECTIONS_NOT_STARTED)
 
-
-@app.get("/get_config_from_gateway")
-async def test_getting_config():
-
-    
-    await receive_config_from_gateway()
-
-@app.get("/get_register_printer")
-async def register_printer():
-    print('SOM TUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU')
-    os.system('rc-service cupsd restart')
-
-    time.sleep(2)
-
-    os.system('lpadmin -p TM- -v socket://192.168.0.102/TM- -P /code/printer_driver/ppd/tm-ba-thermal-rastertotmtr-203.ppd -E')
-
-@app.post('/api/election/state')
-async def receive_current_election_state_from_gateway(state: dict) -> None:
-    """
-    Method for receiving current election state from gateway
-
-    Keyword arguments:
-    state -- current election state
-
-    """
-    print("-------------------", state['status'])
-    await change_state_and_send_to_frontend(state['status'])
-
-
-
-    
-@app.get("/get_print_ticket")
-async def print_ticket_out():
-    print('------------------------------ TU ---------------------------')
-    command = "lpr -o TmxPaperCut=CutPerJob -P TM- /code/src/PDF_creator/NewTicket.pdf"
-    subprocess.run(command, shell=True, check=True)
-    print('------------------------------ TU2 ---------------------------')
 
 if __name__ == '__main__':
     uvicorn.run('main:app', host='127.0.0.1', port=80)

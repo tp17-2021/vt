@@ -15,6 +15,7 @@ services:
       - VOTING_PROCESS_MANAGER_HOST=192.168.0.101:8080
       - VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH=voting-process-manager-api/ws/socket.io
       - VOTING_PROCESS_MANAGER_PATH=192.168.0.101:8080/voting-process-manager-api
+      - PRINTER_IP_ADDRESS=192.168.0.102
       - VT_ONLY_DEV=0
 
   token-reader:
