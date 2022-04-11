@@ -15,6 +15,8 @@ services:
       - VOTING_PROCESS_MANAGER_HOST=host.docker.internal:8101
       - VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH=voting-process-manager-api/ws/socket.io
       - VOTING_PROCESS_MANAGER_PATH=host.docker.internal:8101/voting-process-manager-api
+      - PRINTER_IP_ADDRESS=192.168.0.168
+      - VT_ONLY_DEV=0
 
   vt-frontend:
       build:
