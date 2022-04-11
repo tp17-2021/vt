@@ -83,8 +83,6 @@ async def handle_join(sid, *args, **kwargs):
     await send_current_election_state_to_frontend()
 
 
-
-
 @app.get('/')
 async def hello ():
     """ Sample testing endpoint """
@@ -122,13 +120,12 @@ async def print_vote(vote: dict) -> None:
 
     """
 
-    # try:
-    ticket = NationalTicket(vote)
-    ticket.create_pdf()
+    try:
+        ticket = NationalTicket(vote)
+        ticket.create_pdf()
 
-    # except Exception as e:
-    #     print('Print failed:', e)
-
+    except Exception as e:
+        print('Print failed:', e)
 
 
 async def receive_config_from_gateway() -> None:
@@ -149,11 +146,8 @@ async def receive_config_from_gateway() -> None:
             "http://" + os.environ['STATE_VECTOR_PATH'] + "/config/config.json",
         )
 
-
         with open(config_file_path, 'wb') as f:
             f.write(r.content)
-    
-
 
 
 async def send_current_election_state_to_frontend() -> None:
@@ -172,6 +166,7 @@ async def send_current_election_state_to_frontend() -> None:
             "state": election_state
         }
     )
+
 
 async def send_current_election_state_to_gateway() -> None:
     """
@@ -234,8 +229,6 @@ async def change_state_and_send_to_frontend(new_state: str) -> None:
         print('Invalid state - ' + str(new_state))
         raise HTTPException(status_code=400, detail='Invalid state - ' + str(new_state))
 
-
-
     # Download config from gateway if election just started
     if new_state == ElectionStates.WAITING_FOR_NFC_TAG and election_state == ElectionStates.ELECTIONS_NOT_STARTED:
         await receive_config_from_gateway()
@@ -250,11 +243,8 @@ async def change_state_and_send_to_frontend(new_state: str) -> None:
 async def check_waiting_for_tag() -> None:
     global election_state
     
-    print('----------------------------------------')
-    
     # Do not wait for tag if in this mode
     if  'DONT_WAIT_FOR_TOKEN' in os.environ and os.environ['DONT_WAIT_FOR_TOKEN'] == '1' and election_state == ElectionStates.WAITING_FOR_NFC_TAG:
-        print('============================================')
         await test_token_valid()
 
 
@@ -303,6 +293,7 @@ async def send_token_to_gateway(token: str) -> None:
         if election_state == ElectionStates.TOKEN_NOT_VALID:
             await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
 
+
 async def transform_vote_to_print(vote: dict) -> dict:
     data = get_config()
     
@@ -315,14 +306,12 @@ async def transform_vote_to_print(vote: dict) -> dict:
         if party["_id"] == vote["party_id"]:
             res_dict["party"] = party["name"]
 
-            # print(party["candidates"])
             for candidate in party["candidates"]:
-                # id_in_sequence = i+1 
                 if candidate["_id"] in vote["candidate_ids"]:
                     name = str(candidate["order"]) +". "+ candidate["first_name"] +" "+ candidate["last_name"]
                     res_dict["candidates"].append(name)
 
-    print(res_dict)
+    print("Vote to print:", res_dict)
     
     return res_dict
 
@@ -406,19 +395,20 @@ async def vote(
     if election_state != ElectionStates.TOKEN_VALID:
         raise HTTPException(status_code=400, detail='Token not valid')
 
-    # try:
-    await send_vote_to_gateway(vote.__dict__)
-    # raise ValueError("Simulated error")
-    await change_state_and_send_to_frontend(ElectionStates.VOTE_SUCCESS)
-    await asyncio.sleep(5)
-    if election_state == ElectionStates.VOTE_SUCCESS:
-        await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
-    # except Exception as e:
-    #     print("/api/vote_generated - exception", e)
-    #     await change_state_and_send_to_frontend(ElectionStates.VOTE_ERROR)
-    #     await asyncio.sleep(5)
-    #     if election_state == ElectionStates.VOTE_ERROR:
-    #         await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
+    try:
+        await send_vote_to_gateway(vote.__dict__)
+        # raise ValueError("Simulated error")
+        await change_state_and_send_to_frontend(ElectionStates.VOTE_SUCCESS)
+        await asyncio.sleep(5)
+        if election_state == ElectionStates.VOTE_SUCCESS:
+            await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
+
+    except Exception as e:
+        print("/api/vote_generated - exception", e)
+        await change_state_and_send_to_frontend(ElectionStates.VOTE_ERROR)
+        await asyncio.sleep(5)
+        if election_state == ElectionStates.VOTE_ERROR:
+            await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
 
 
 
@@ -469,7 +459,6 @@ async def startup_event():
 
                 sys.exit(1)
 
-
         g_public_key = r.json()['gateway_public_key']
         vt_id = my_id = r.json()['new_id']
 
@@ -489,11 +478,8 @@ async def startup_event():
         )
         
     await check_waiting_for_tag()
-        
     await receive_config_from_gateway()
-
     await send_current_election_state_to_gateway()
-
 
 
 # post method for recieving token from client
@@ -523,8 +509,6 @@ def get_config():
 
 @app.get("/get_config_from_gateway")
 async def test_getting_config():
-
-    
     await receive_config_from_gateway()
 
 @app.get("/get_register_printer")
@@ -535,6 +519,7 @@ async def register_printer():
     time.sleep(2)
 
     os.system(f'lpadmin -p TM- -v socket://{os.environ["PRINTER_IP_ADDRESS"]}/TM- -P /code/printer_driver/ppd/tm-ba-thermal-rastertotmtr-203.ppd -E')
+
 
 @app.post('/api/election/state')
 async def receive_current_election_state_from_gateway(state: dict) -> None:
@@ -547,7 +532,6 @@ async def receive_current_election_state_from_gateway(state: dict) -> None:
     """
     print("-------------------", state['status'])
     await change_state_and_send_to_frontend(state['status'])
-
 
 
     
