@@ -302,6 +302,7 @@ async def send_token_to_gateway(token: str) -> None:
 
 async def transform_vote_to_print(vote: dict) -> dict:
 
+    config_file_path = os.path.join(os.getcwd(), './src/public/config.json')
     with open(config_file_path, 'rb') as f:
         data = json.load(f)
         res_dict = {}
@@ -334,6 +335,11 @@ async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
     """
     global registered_printer
     # skip while on dev mode
+
+    if registered_printer == False:
+        await register_printer()
+        registered_printer = True
+    
     if  'VT_ONLY_DEV' in os.environ and os.environ['VT_ONLY_DEV'] == '1':
 
         token = get_validated_token()
@@ -343,11 +349,6 @@ async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
             'vote': print_vote_
         }
         await print_vote(printing_data)
-
-        if registered_printer == False:
-            await register_printer()
-            registered_printer = True
-        
 
         await print_ticket_out()
 
@@ -366,6 +367,8 @@ async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
         'vote': print_vote_
     }
     await print_vote(printing_data)
+
+    await print_ticket_out()
 
     encrypted_data = encrypt_message(data)
 
@@ -549,7 +552,7 @@ async def register_printer():
 
     time.sleep(2)
 
-    os.system('lpadmin -p TM- -v socket://192.168.192.168/TM- -P /code/printer_driver/ppd/tm-ba-thermal-rastertotmtr-203.ppd -E')
+    os.system('lpadmin -p TM- -v socket://192.168.0.102/TM- -P /code/printer_driver/ppd/tm-ba-thermal-rastertotmtr-203.ppd -E')
 
 @app.post('/api/election/state')
 async def receive_current_election_state_from_gateway(state: dict) -> None:
@@ -568,8 +571,10 @@ async def receive_current_election_state_from_gateway(state: dict) -> None:
     
 @app.get("/get_print_ticket")
 async def print_ticket_out():
+    print('------------------------------ TU ---------------------------')
     command = "lpr -o TmxPaperCut=CutPerJob -P TM- /code/src/PDF_creator/NewTicket.pdf"
     subprocess.run(command, shell=True, check=True)
+    print('------------------------------ TU2 ---------------------------')
 
 if __name__ == '__main__':
     uvicorn.run('main:app', host='127.0.0.1', port=80)
