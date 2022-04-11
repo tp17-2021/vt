@@ -180,6 +180,9 @@ async def send_current_election_state_to_gateway() -> None:
 
     global election_state, vt_id
 
+    if  'VT_ONLY_DEV' in os.environ and os.environ['VT_ONLY_DEV'] == '1':
+        return
+
     # Emit event to gateway
     print("emiting status", election_state)
     await sio.emit('vt_stauts',
@@ -288,27 +291,25 @@ async def send_token_to_gateway(token: str) -> None:
             await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
 
 async def transform_vote_to_print(vote: dict) -> dict:
-
-    config_file_path = os.path.join(os.getcwd(), './src/public/config.json')
-    with open(config_file_path, 'rb') as f:
-        data = json.load(f)
-        res_dict = {}
-        res_dict['title'] = "Voľby do národnej rady"
-        res_dict["candidates"] = []
-
-        for party in data["parties"]:
-            if party["party_number"] == vote["party_id"]:
-                res_dict["party"] = party["name"]
-
-                # print(party["candidates"])
-                for i,candidate in enumerate(party["candidates"]):
-                    # id_in_sequence = i+1 
-                    if candidate["order"] in vote["candidate_ids"]:
-                        name = str(candidate["order"]) +". "+ candidate["first_name"] +" "+ candidate["last_name"]
-                        res_dict["candidates"].append(name)
-
+    data = get_config()
     
+    res_dict = {}
+    res_dict['title'] = "Voľby do národnej rady"
+    res_dict["candidates"] = []
+
+    for party in data["parties"]:
+        if party["party_number"] == vote["party_id"]:
+            res_dict["party"] = party["name"]
+
+            # print(party["candidates"])
+            for i,candidate in enumerate(party["candidates"]):
+                # id_in_sequence = i+1 
+                if candidate["order"] in vote["candidate_ids"]:
+                    name = str(candidate["order"]) +". "+ candidate["first_name"] +" "+ candidate["last_name"]
+                    res_dict["candidates"].append(name)
+
     print(res_dict)
+    
     return res_dict
 
 async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
@@ -391,19 +392,19 @@ async def vote(
     if election_state != ElectionStates.TOKEN_VALID:
         raise HTTPException(status_code=400, detail='Token not valid')
 
-    try:
-        await send_vote_to_gateway(vote.__dict__)
-        # raise ValueError("Simulated error")
-        await change_state_and_send_to_frontend(ElectionStates.VOTE_SUCCESS)
-        await asyncio.sleep(5)
-        if election_state == ElectionStates.VOTE_SUCCESS:
-            await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
-    except Exception as e:
-        print("/api/vote_generated - exception",  e)
-        await change_state_and_send_to_frontend(ElectionStates.VOTE_ERROR)
-        await asyncio.sleep(5)
-        if election_state == ElectionStates.VOTE_ERROR:
-            await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
+    # try:
+    await send_vote_to_gateway(vote.__dict__)
+    # raise ValueError("Simulated error")
+    await change_state_and_send_to_frontend(ElectionStates.VOTE_SUCCESS)
+    await asyncio.sleep(5)
+    if election_state == ElectionStates.VOTE_SUCCESS:
+        await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
+    # except Exception as e:
+    #     print("/api/vote_generated - exception", e)
+    #     await change_state_and_send_to_frontend(ElectionStates.VOTE_ERROR)
+    #     await asyncio.sleep(5)
+    #     if election_state == ElectionStates.VOTE_ERROR:
+    #         await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
 
 
 
@@ -472,6 +473,8 @@ async def startup_event():
             socketio_path = os.environ['VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH'],
             transports=['polling']
         )
+        
+    await receive_config_from_gateway()
 
     await send_current_election_state_to_gateway()
 
@@ -493,6 +496,13 @@ async def token(
     await send_token_to_gateway(token)
 
 
+def get_config():
+    os.chdir('/code/')
+
+    with open(os.path.join(os.getcwd(), 'src/public/config.json'), 'rb') as f:
+        data = json.load(f)
+
+    return data
 
 
 @app.get("/get_config_from_gateway")
