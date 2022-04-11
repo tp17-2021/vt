@@ -17,8 +17,7 @@ class BaseTicket(object):
         data -- Dictionary of data, which contains whole vote
 
          """
-        self.voting_data = data['vote']
-        self.voting_data_token = data
+        self.voting_data = data
 
     def print_ticket(self, path: str): 
         """ Method for creating PDF file from vote """

@@ -3,9 +3,7 @@ from enum import Enum
 import logging
 import os
 import sys
-import json
 import time
-import subprocess
 
 from fastapi import Body, FastAPI, status, HTTPException, File, UploadFile
 from fastapi.responses import HTMLResponse, FileResponse
@@ -49,7 +47,7 @@ __validated_token = "valid"
 election_config = None
 election_state = 'inactive'
 vt_id = None
-registered_printer = False
+
 
 ### ----gateway websocket----
 import socketio
@@ -315,6 +313,7 @@ async def transform_vote_to_print(vote: dict) -> dict:
     
     return res_dict
 
+
 async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
     """
     Method for sending recieved vote to gateway. Backend send "success" to client
@@ -324,7 +323,7 @@ async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
     vote -- vote object that user created in his action
 
     """
-    global registered_printer
+
     # skip while on dev mode
 
     if registered_printer == False:
@@ -332,7 +331,6 @@ async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
         registered_printer = True
     
     if  'VT_ONLY_DEV' in os.environ and os.environ['VT_ONLY_DEV'] == '1':
-
         token = get_validated_token()
         print_vote_ = await transform_vote_to_print(vote)
         printing_data = {
@@ -352,12 +350,7 @@ async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
         'vote': vote
     }
 
-    print_vote_ = await transform_vote_to_print(vote)
-    printing_data = {
-        'token': token,
-        'vote': print_vote_
-    }
-    await print_vote(printing_data)
+    await print_vote(vote)
 
     await print_ticket_out()
 
@@ -511,6 +504,7 @@ def get_config():
 async def test_getting_config():
     await receive_config_from_gateway()
 
+
 @app.get("/get_register_printer")
 async def register_printer():
     print('SOM TUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU')
@@ -532,7 +526,6 @@ async def receive_current_election_state_from_gateway(state: dict) -> None:
     """
     print("-------------------", state['status'])
     await change_state_and_send_to_frontend(state['status'])
-
 
     
 @app.get("/get_print_ticket")

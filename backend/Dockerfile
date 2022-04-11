@@ -3,12 +3,10 @@ FROM python:3.10-alpine as base
 WORKDIR /code
 
 RUN apk update
-
 RUN apk add -U gcc g++ bash
 RUN apk add jpeg-dev zlib-dev libjpeg
 RUN apk add --upgrade poppler
 RUN apk add --upgrade poppler-utils
-RUN apk add --upgrade cups-dev
 
 COPY ./requirements.txt ./code/requirements.txt
 COPY ./requirements_test.txt ./code/requirements_test.txt
