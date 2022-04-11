@@ -17,6 +17,7 @@ services:
       - VOTING_PROCESS_MANAGER_PATH=host.docker.internal:8080/voting-process-manager-api
       - PRINTER_IP_ADDRESS=192.168.0.168
       - VT_ONLY_DEV=1
+      - DONT_WAIT_FOR_TOKEN=1
 
   token-reader:
     build:

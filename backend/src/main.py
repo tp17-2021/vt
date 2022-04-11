@@ -10,6 +10,7 @@ import subprocess
 from fastapi import Body, FastAPI, status, HTTPException, File, UploadFile
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi_socketio import SocketManager
+from fastapi_utils.tasks import repeat_every
 import uvicorn
 import requests
 
@@ -245,6 +246,18 @@ async def change_state_and_send_to_frontend(new_state: str) -> None:
     await send_current_election_state_to_frontend()
 
 
+@repeat_every(seconds=5)  # 1 minute
+async def check_waiting_for_tag() -> None:
+    global election_state
+    
+    print('----------------------------------------')
+    
+    # Do not wait for tag if in this mode
+    if  'DONT_WAIT_FOR_TOKEN' in os.environ and os.environ['DONT_WAIT_FOR_TOKEN'] == '1' and election_state == ElectionStates.WAITING_FOR_NFC_TAG:
+        print('============================================')
+        await test_token_valid()
+
+
 async def send_token_to_gateway(token: str) -> None:
     """
     Method for sending token to gateway to validate it
@@ -474,6 +487,8 @@ async def startup_event():
             socketio_path = os.environ['VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH'],
             transports=['polling']
         )
+        
+    await check_waiting_for_tag()
         
     await receive_config_from_gateway()
 
