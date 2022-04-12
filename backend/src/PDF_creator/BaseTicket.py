@@ -1,3 +1,4 @@
+import os
 import qrcode
 from fpdf import FPDF
 from PIL import Image
@@ -17,7 +18,8 @@ class BaseTicket(object):
         data -- Dictionary of data, which contains whole vote
 
          """
-        self.voting_data = data
+        self.voting_data = data['vote']
+        self.voting_data_token = data
 
     def print_ticket(self, path: str): 
         """ Method for creating PDF file from vote """
@@ -28,7 +30,7 @@ class BaseTicket(object):
         for i in range(len(images)):
             images[i].save('ticket.jpg', 'JPEG')
 
-        printer = Network("192.168.192.168")
+        printer = Network(os.environ['PRINTER_IP_ADDRESS'])
         printer.image('ticket.jpg')
         printer.cut()
 

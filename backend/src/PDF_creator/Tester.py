@@ -4,8 +4,8 @@ from PIL import Image
 
 from BaseTicket import BaseTicket
 from NationalTicket import NationalTicket
-from MunicipalTicket import MunicipalTicket
-from PresidentTicket import PresidentTicket
+# from MunicipalTicket import MunicipalTicket
+# from PresidentTicket import PresidentTicket
 
 
 ###########################################################################
@@ -31,30 +31,30 @@ o.create_pdf()
 
 ###########################################################################
 
-data = {}
-data['title'] = "Komunálne voľby 2024"
-data["candidate_head"] = "3. Matúš Vallo"
-data["candidates"] = [
-    '1. Marek Ceľuch',
-    '2. Matúš Staš',
-    '3. Lucia Janíková',
-    '4. Lilbor Duda',
-    '5. Denis Klenovič',
-    '6. Timotej Králik',
-    '7. Jaro Erdelyi',
-    '8. Soňa Zwang',
-    '9. Neviem Neviem',
-    ]
+# data = {}
+# data['title'] = "Komunálne voľby 2024"
+# data["candidate_head"] = "3. Matúš Vallo"
+# data["candidates"] = [
+#     '1. Marek Ceľuch',
+#     '2. Matúš Staš',
+#     '3. Lucia Janíková',
+#     '4. Lilbor Duda',
+#     '5. Denis Klenovič',
+#     '6. Timotej Králik',
+#     '7. Jaro Erdelyi',
+#     '8. Soňa Zwang',
+#     '9. Neviem Neviem',
+#     ]
 
 
-o = MunicipalTicket(data)
-o.create_pdf()
+# o = MunicipalTicket(data)
+# o.create_pdf()
 
 ###########################################################################
 
-data = {}
-data['title'] = "Prezidentské voľby 2024"
-data["candidate"] = "2. Zuzana Čaputová"
+# data = {}
+# data['title'] = "Prezidentské voľby 2024"
+# data["candidate"] = "2. Zuzana Čaputová"
 
-o = PresidentTicket(data)
-o.Create_pdf()
+# o = PresidentTicket(data)
+# o.Create_pdf()

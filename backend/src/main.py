@@ -3,11 +3,14 @@ from enum import Enum
 import logging
 import os
 import sys
+import json
 import time
+import subprocess
 
 from fastapi import Body, FastAPI, status, HTTPException, File, UploadFile
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi_socketio import SocketManager
+from fastapi_utils.tasks import repeat_every
 import uvicorn
 import requests
 
@@ -27,23 +30,7 @@ from src.schemas.votes import VotePartial
 
 
 app = FastAPI(root_path=os.environ['ROOT_PATH'])
-
-LOGGER = logging.getLogger(__name__)
-
-
 app.mount("/public", StaticFiles(directory="src/public"), name="public")
-
-# origins = ["http://localhost:8079/", "http://localhost:5000/"]
-
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=origins,
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
-
-# host.docker.internal  - toto odoslne na cely pocitac a nie dockerovsky
 
 
 # enum for election_states
@@ -62,6 +49,7 @@ __validated_token = "valid"
 election_config = None
 election_state = 'inactive'
 vt_id = None
+registered_printer = False
 
 
 ### ----gateway websocket----
@@ -94,6 +82,7 @@ election_state = ElectionStates.ELECTIONS_NOT_STARTED
 @app.sio.on('join')
 async def handle_join(sid, *args, **kwargs):
     await send_current_election_state_to_frontend()
+
 
 @app.get('/')
 async def hello ():
@@ -140,7 +129,6 @@ async def print_vote(vote: dict) -> None:
         print('Print failed:', e)
 
 
-
 async def receive_config_from_gateway() -> None:
     """
     Method for receiving election config from gateway
@@ -159,10 +147,8 @@ async def receive_config_from_gateway() -> None:
             "http://" + os.environ['STATE_VECTOR_PATH'] + "/config/config.json",
         )
 
-
         with open(config_file_path, 'wb') as f:
             f.write(r.content)
-
 
 
 async def send_current_election_state_to_frontend() -> None:
@@ -182,6 +168,7 @@ async def send_current_election_state_to_frontend() -> None:
         }
     )
 
+
 async def send_current_election_state_to_gateway() -> None:
     """
     Method for sending election state to gateway
@@ -189,6 +176,9 @@ async def send_current_election_state_to_gateway() -> None:
     """
 
     global election_state, vt_id
+
+    if  'VT_ONLY_DEV' in os.environ and os.environ['VT_ONLY_DEV'] == '1':
+        return
 
     # Emit event to gateway
     print("emiting status", election_state)
@@ -240,8 +230,6 @@ async def change_state_and_send_to_frontend(new_state: str) -> None:
         print('Invalid state - ' + str(new_state))
         raise HTTPException(status_code=400, detail='Invalid state - ' + str(new_state))
 
-
-
     # Download config from gateway if election just started
     if new_state == ElectionStates.WAITING_FOR_NFC_TAG and election_state == ElectionStates.ELECTIONS_NOT_STARTED:
         await receive_config_from_gateway()
@@ -250,6 +238,15 @@ async def change_state_and_send_to_frontend(new_state: str) -> None:
     election_state = new_state
 
     await send_current_election_state_to_frontend()
+
+
+@repeat_every(seconds=5)  # 1 minute
+async def check_waiting_for_tag() -> None:
+    global election_state
+    
+    # Do not wait for tag if in this mode
+    if  'DONT_WAIT_FOR_TOKEN' in os.environ and os.environ['DONT_WAIT_FOR_TOKEN'] == '1' and election_state == ElectionStates.WAITING_FOR_NFC_TAG:
+        await test_token_valid()
 
 
 async def send_token_to_gateway(token: str) -> None:
@@ -298,6 +295,28 @@ async def send_token_to_gateway(token: str) -> None:
             await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
 
 
+async def transform_vote_to_print(vote: dict) -> dict:
+    data = get_config()
+    
+    res_dict = {}
+    res_dict['title'] = "Voľby do národnej rady"
+    res_dict["candidates"] = []
+    res_dict["party"] = "---"
+
+    for party in data["parties"]:
+        if party["_id"] == vote["party_id"]:
+            res_dict["party"] = party["name"]
+
+            for candidate in party["candidates"]:
+                if candidate["_id"] in vote["candidate_ids"]:
+                    name = str(candidate["order"]) +". "+ candidate["first_name"] +" "+ candidate["last_name"]
+                    res_dict["candidates"].append(name)
+
+    print("Vote to print:", res_dict)
+    
+    return res_dict
+
+
 async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
     """
     Method for sending recieved vote to gateway. Backend send "success" to client
@@ -307,9 +326,25 @@ async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
     vote -- vote object that user created in his action
 
     """
+    global registered_printer
 
     # skip while on dev mode
+
+    if registered_printer == False:
+        await register_printer()
+        registered_printer = True
+    
     if  'VT_ONLY_DEV' in os.environ and os.environ['VT_ONLY_DEV'] == '1':
+        token = get_validated_token()
+        print_vote_ = await transform_vote_to_print(vote)
+        printing_data = {
+            'token': token,
+            'vote': print_vote_
+        }
+        await print_vote(printing_data)
+
+        await print_ticket_out()
+
         return
 
     token = get_validated_token()
@@ -319,7 +354,14 @@ async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
         'vote': vote
     }
 
-    await print_vote(vote)
+    print_vote_ = await transform_vote_to_print(vote)
+    printing_data = {
+        'token': token,
+        'vote': print_vote_
+    }
+    await print_vote(printing_data)
+
+    await print_ticket_out()
 
     encrypted_data = encrypt_message(data)
 
@@ -362,8 +404,9 @@ async def vote(
         await asyncio.sleep(5)
         if election_state == ElectionStates.VOTE_SUCCESS:
             await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
+
     except Exception as e:
-        print("/api/vote_generated - exception",  e)
+        print("/api/vote_generated - exception", e)
         await change_state_and_send_to_frontend(ElectionStates.VOTE_ERROR)
         await asyncio.sleep(5)
         if election_state == ElectionStates.VOTE_ERROR:
@@ -377,7 +420,7 @@ async def vote(
 @app.on_event("startup")
 async def startup_event():
     """ Method that connect to gateway at start of running VT """
-    global vt_id
+    global vt_id, election_state
 
     private_key, public_key = electiersa.get_rsa_key_pair()
     with open('/secret/private_key.txt', 'w') as f:
@@ -389,6 +432,8 @@ async def startup_event():
 
         with open('/idk_data/my_id.txt', 'w') as f:
             f.write(str('vtdev1'))
+            
+        election_state = ElectionStates.WAITING_FOR_NFC_TAG
 
     else:
         r = requests.post(
@@ -416,7 +461,6 @@ async def startup_event():
 
                 sys.exit(1)
 
-
         g_public_key = r.json()['gateway_public_key']
         vt_id = my_id = r.json()['new_id']
 
@@ -426,17 +470,18 @@ async def startup_event():
         with open('/idk_data/my_id.txt', 'w') as f:
             f.write(str(my_id))
 
-    # connect to gateway websocket
-    websocket_host = 'http://' + os.environ['VOTING_PROCESS_MANAGER_HOST']
-    print("host",websocket_host, "path", os.environ['VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH'])
-    await sio.connect(
-        websocket_host,
-        socketio_path = os.environ['VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH'],
-        transports=['polling']
-    )
-
+        # connect to gateway websocket
+        websocket_host = 'http://' + os.environ['VOTING_PROCESS_MANAGER_HOST']
+        print("host",websocket_host, "path", os.environ['VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH'])
+        await sio.connect(
+            websocket_host,
+            socketio_path = os.environ['VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH'],
+            transports=['polling']
+        )
+        
+    await check_waiting_for_tag()
+    await receive_config_from_gateway()
     await send_current_election_state_to_gateway()
-
 
 
 # post method for recieving token from client
@@ -453,6 +498,52 @@ async def token(
     """
 
     await send_token_to_gateway(token)
+
+
+def get_config():
+    os.chdir('/code/')
+
+    with open(os.path.join(os.getcwd(), 'src/public/config.json'), 'rb') as f:
+        data = json.load(f)
+
+    return data
+
+
+@app.get("/get_config_from_gateway")
+async def test_getting_config():
+    await receive_config_from_gateway()
+
+
+@app.get("/get_register_printer")
+async def register_printer():
+    print('SOM TUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU')
+    os.system('rc-service cupsd restart')
+
+    time.sleep(2)
+
+    os.system(f'lpadmin -p TM- -v socket://{os.environ["PRINTER_IP_ADDRESS"]}/TM- -P /code/printer_driver/ppd/tm-ba-thermal-rastertotmtr-203.ppd -E')
+
+
+@app.post('/api/election/state')
+async def receive_current_election_state_from_gateway(state: dict) -> None:
+    """
+    Method for receiving current election state from gateway
+
+    Keyword arguments:
+    state -- current election state
+
+    """
+    print("-------------------", state['status'])
+    await change_state_and_send_to_frontend(state['status'])
+
+    
+@app.get("/get_print_ticket")
+async def print_ticket_out():
+    print('------------------------------ TU ---------------------------')
+    command = "lpr -o TmxPaperCut=CutPerJob -P TM- /code/src/PDF_creator/NewTicket.pdf"
+    subprocess.run(command, shell=True, check=True)
+    print('------------------------------ TU2 ---------------------------')
+
 
 
 # This is for future usage, please keep it here, in final code, this won't be here :)
@@ -489,44 +580,6 @@ async def test_election_stop():
     """
     await change_state_and_send_to_frontend(ElectionStates.ELECTIONS_NOT_STARTED)
 
-
-@app.get("/get_config_from_gateway")
-async def test_getting_config():
-    await receive_config_from_gateway()
-
-
-@app.post('/api/election/state')
-async def receive_current_election_state_from_gateway(state: dict) -> None:
-    """
-    Method for receiving current election state from gateway
-
-    Keyword arguments:
-    state -- current election state
-
-    """
-    print("-------------------", state['status'])
-    await change_state_and_send_to_frontend(state['status'])
-
-
-
-@app.get("/test_print")
-async def test_print():
-    data = {}
-    data['title'] = "Volby do narodnej rady"
-    data["party"] = "Smer - socialna demokracia"
-    data["candidates"] = [
-        '1. Marek Ceľuch',
-        '2. Matúš StaŠ',
-        '3. Lucia Janikova',
-        '4. Lilbor Duda',
-        '5. Denis Klenovic',
-        '6. Timotej Kralik',
-        '7. Jaro Erdelyi',
-        '8. Voldemort Voldemort',
-        '9. Neviem Neviem',
-        ]
-
-    await print_vote(data)
 
 if __name__ == '__main__':
     uvicorn.run('main:app', host='127.0.0.1', port=80)
