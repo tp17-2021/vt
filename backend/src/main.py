@@ -540,7 +540,7 @@ async def receive_current_election_state_from_gateway(state: dict) -> None:
 @app.get("/get_print_ticket")
 async def print_ticket_out():
     print('------------------------------ TU ---------------------------')
-    command = "lpr -o TmxPaperCut=CutPerJob -P TM- /code/src/PDF_creator/NewTicket.pdf"
+    command = "lpr -o TmxPaperCut=CutPerPage -P TM- /code/src/PDF_creator/NewTicket.pdf"
     subprocess.run(command, shell=True, check=True)
     print('------------------------------ TU2 ---------------------------')
 
