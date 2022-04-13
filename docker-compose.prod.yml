@@ -38,6 +38,7 @@ services:
       dockerfile: ./Dockerfile
       args:
         vite_base_path: /frontend
+    restart: unless-stopped
     depends_on:
       - vt-backend
     ports:
