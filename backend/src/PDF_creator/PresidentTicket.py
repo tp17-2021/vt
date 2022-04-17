@@ -19,9 +19,6 @@ class PresidentTicket(BaseTicket):
         super().__init__(data)
 
 
-    def print_ticket(self, path: str):
-        super().print_ticket(path)
-
     def Create_pdf(self):
         """ Method for creating PDF file from vote """
 

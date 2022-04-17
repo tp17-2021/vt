@@ -19,9 +19,6 @@ class NationalTicket(BaseTicket):
          """
         super().__init__(data)
 
-    def print_ticket(self, path: str):
-        """ Method for creating PDF file from vote """
-        super().print_ticket(path)
 
     def create_pdf(self):
         """ Method for creating PDF file from vote """
@@ -61,9 +58,9 @@ class NationalTicket(BaseTicket):
         candidates = BaseTicket.preprocessText(
             self,
             self.voting_data['candidates'],
-            21
+            25
         )
-        pdf.multi_cell(35, 5,candidates)
+        pdf.multi_cell(40, 5,candidates)
 
         pdf.set_xy(43,22)
 
@@ -72,5 +69,4 @@ class NationalTicket(BaseTicket):
         img.save("Temp/sample.png")
         pdf.image("Temp/sample.png",w=30,h=30)
 
-        print('*************')
         pdf.output('NewTicket.pdf', 'F')

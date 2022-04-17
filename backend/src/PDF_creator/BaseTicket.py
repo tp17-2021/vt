@@ -21,19 +21,6 @@ class BaseTicket(object):
         self.voting_data = data['vote']
         self.voting_data_token = data
 
-    def print_ticket(self, path: str): 
-        """ Method for creating PDF file from vote """
-
-        
-        images = convert_from_path(path)
-
-        for i in range(len(images)):
-            images[i].save('ticket.jpg', 'JPEG')
-
-        printer = Network(os.environ['PRINTER_IP_ADDRESS'])
-        printer.image('ticket.jpg')
-        printer.cut()
-
     def preprocessText(self, candidates: list, max_line_len: int) -> str:
         """
         Method for preprocessing text before priting into PDF.

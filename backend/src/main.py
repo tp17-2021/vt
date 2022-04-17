@@ -26,6 +26,10 @@ from src.PDF_creator.PresidentTicket import PresidentTicket
 from src.PDF_creator.NationalTicket import NationalTicket
 from src.PDF_creator.MunicipalTicket import MunicipalTicket
 
+import src.vote_transformer
+from src.vote_transformer import transform_vote_to_print,get_config
+
+import src.schemas.votes
 from src.schemas.votes import VotePartial
 
 
@@ -295,27 +299,6 @@ async def send_token_to_gateway(token: str) -> None:
             await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
 
 
-async def transform_vote_to_print(vote: dict) -> dict:
-    data = get_config()
-    
-    res_dict = {}
-    res_dict['title'] = "Voľby do národnej rady"
-    res_dict["candidates"] = []
-    res_dict["party"] = "---"
-
-    for party in data["parties"]:
-        if party["_id"] == vote["party_id"]:
-            res_dict["party"] = party["name"]
-
-            for candidate in party["candidates"]:
-                if candidate["_id"] in vote["candidate_ids"]:
-                    name = str(candidate["order"]) +". "+ candidate["first_name"] +" "+ candidate["last_name"]
-                    res_dict["candidates"].append(name)
-
-    print("Vote to print:", res_dict)
-    
-    return res_dict
-
 
 async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
     """
@@ -341,6 +324,9 @@ async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
             'token': token,
             'vote': print_vote_
         }
+
+        print("This is final valid printing_data")
+        print(printing_data)
         await print_vote(printing_data)
 
         await print_ticket_out()
@@ -498,15 +484,6 @@ async def token(
     """
 
     await send_token_to_gateway(token)
-
-
-def get_config():
-    os.chdir('/code/')
-
-    with open(os.path.join(os.getcwd(), 'src/public/config.json'), 'rb') as f:
-        data = json.load(f)
-
-    return data
 
 
 @app.get("/get_config_from_gateway")

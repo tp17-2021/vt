@@ -1,3 +1,5 @@
+import os
+import json
 import pytest
 import asyncio
 import uvicorn
@@ -8,83 +10,91 @@ import requests_mock
 
 from fastapi.testclient import TestClient
 
-import src.main
-from src.main import app
-from src.main import election_config
-from src.main import election_state
-from src.main import send_vote_to_gateway
-from src.main import send_token_to_gateway
+# import src.main
+# from src.main import app
+# from src.main import election_config
+# from src.main import election_state
+# from src.main import send_vote_to_gateway
+# from src.main import send_token_to_gateway
 
-client_2 = ASGISession(app)
+from src.PDF_creator.NationalTicket import NationalTicket
+from src.vote_transformer import transform_vote_to_print
+
+# client_2 = ASGISession(app)
 
 
 @pytest.fixture()
-def mock_send_current_election_state_to_client(mocker):
+def mock_get_config(mocker):
     future = asyncio.Future()
     mocker.patch(
-        'src.main' + '.send_current_election_state_to_client', return_value=future)
-    return future
+        'src.vote_transformer' + '.get_config', return_value=future)
+    return 
 
-
-@pytest.fixture()
-def mock_send_validated_token_to_client(mocker):
-    future = asyncio.Future()
-    mocker.patch('src.main' + '.send_validated_token_to_client',
-                 return_value=future)
-    return future
-
-
-# @pytest.mark.asyncio
-# async def test_config_received(mock_send_election_config_to_client):
-
-#     test_config = {"Test":"Test"}
-
-#     global election_config
-#     assert election_config == None
-
-#     mock_send_election_config_to_client.set_result( { "code":200, "dict":{} } )
-
-#     response = await client_2.post("/api/election/config", json = test_config)
-#     assert response.status_code == 200
-#     assert src.main.election_config == test_config
-
-
-# @pytest.mark.asyncio
-# async def test_election_state(mock_send_current_election_state_to_client):
-
-#     test_state = {"status": "end"}
-
-#     global election_state
-#     assert election_state == 'end'
-
-#     mock_send_current_election_state_to_client.set_result( { "code": 200, "status": "end" } )
-
-#     response = await client_2.post("/api/election/state", json = test_state)
-#     assert response.status_code == 200
-#     assert src.main.election_state == test_state['status']
 
 @pytest.mark.asyncio
 async def test_default():
     assert 1 == 1
 
+@pytest.mark.asyncio
+async def test_create_pdf():
+    vote = {
+        'token': 'valid',
+        'vote': {
+            'title': 'Voľby do národnej rady',
+            'candidates': ['4. Peter Pčolinskýyyyyyyyyyyyyyyyyyyyyyyyy', '6. Adriana Pčolinská'],
+            'party': 'SME RODINA'}
+    }
+    
+    ticket_class = NationalTicket(vote)
+    ticket_class.create_pdf()
 
-# @pytest.mark.asyncio
-# async def test_send_token_to_gateway(mock_send_validated_token_to_client):
-#     ### Not done
-
-#     with requests_mock.Mocker() as mock_request:
-#         mock_request.post("http://host.docker.internal/voting-service-api/api/token-validity", text="true", status_code=200 )
-
-#         mock_send_validated_token_to_client.set_result( { "code":200} )
-
-#         response = await send_token_to_gateway('valid')
+    assert 'NewTicket.pdf' in os.listdir()
 
 
-# @pytest.mark.asyncio
-# async def test_send_vote_to_gateway():
+@pytest.mark.asyncio
+async def test_cut_lines_to_max_length():
+    vote = {
+        'token': 'valid',
+        'vote': {
+            'title': 'Voľby do národnej rady',
+            'candidates': ['4. Peter Pčolinskýyyyyyyyyyyyyyyyyyyyyyyyy', '6. Adriana Pčolinská'],
+            'party': 'SME RODINA'}
+    }
+    
+    ticket_class = NationalTicket(vote)
+    candidates_str = ticket_class.preprocessText(vote['vote']['candidates'],25)
 
-#     with requests_mock.Mocker() as mock_request:
-#         mock_request.post("http://host.docker.internal/voting-service-api/api/vote", text="true", status_code=200 )
-#         response = requests.post("http://host.docker.internal/voting-service-api/api/vote",json={ 'token':"valid",'vote':{} } )
-#         assert response.text == "true"
-#         assert response.status_code == 200
+    counter = 0
+    for character in candidates_str:
+        if character == '\n':
+            if counter > 26:
+                assert False
+            else:
+                counter = 0
+        else:
+            counter += 1
+
+
+@pytest.mark.asyncio
+async def test_create_vote_from_config(mocker):
+    vote = {'party_id': 0, 'candidate_ids': [4, 3, 2, 1]}
+
+    vote_to_print = {
+        'title': 'Voľby do národnej rady',
+         'candidates': ['2. Andrej Trnovec', '3. Marián Kňažko', '4. Richard Burkovský', '5. Miroslav Faktor'],
+          'party': 'Slovenská ľudová strana Andreja Hlinku'
+    }
+
+    with open('config.json', 'rb') as f:
+        data = json.load(f)
+    
+    
+    mocker.patch('src.vote_transformer.get_config', return_value=data)
+
+    res = await transform_vote_to_print(vote)
+
+    assert res == vote_to_print
+
+
+
+
