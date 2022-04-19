@@ -9,7 +9,7 @@ from httpx import AsyncClient
 import requests_mock
 
 from fastapi.testclient import TestClient
-
+from unittest import mock
 # import src.main
 # from src.main import app
 # from src.main import election_config
@@ -20,7 +20,14 @@ from fastapi.testclient import TestClient
 from src.PDF_creator.NationalTicket import NationalTicket
 from src.vote_transformer import transform_vote_to_print
 
-# client_2 = ASGISession(app)
+with mock.patch.dict(os.environ, os.environ):
+    from src.main import app
+
+
+@pytest.fixture
+def client ():
+    with TestClient(app) as c:
+        yield c
 
 
 @pytest.fixture()
@@ -48,7 +55,7 @@ async def test_create_pdf():
     ticket_class = NationalTicket(vote)
     ticket_class.create_pdf()
 
-    assert 'NewTicket.pdf' in os.listdir()
+    assert 'NewTicket.pdf' in os.listdir('tests')
 
 
 @pytest.mark.asyncio
@@ -76,7 +83,9 @@ async def test_cut_lines_to_max_length():
 
 
 @pytest.mark.asyncio
-async def test_create_vote_from_config(mocker):
+async def test_create_vote_from_config(client):
+    
+    print(os.listdir())
     vote = {'party_id': 0, 'candidate_ids': [4, 3, 2, 1]}
 
     vote_to_print = {
@@ -84,12 +93,6 @@ async def test_create_vote_from_config(mocker):
          'candidates': ['2. Andrej Trnovec', '3. Marián Kňažko', '4. Richard Burkovský', '5. Miroslav Faktor'],
           'party': 'Slovenská ľudová strana Andreja Hlinku'
     }
-
-    with open('config.json', 'rb') as f:
-        data = json.load(f)
-    
-    
-    mocker.patch('src.vote_transformer.get_config', return_value=data)
 
     res = await transform_vote_to_print(vote)
 

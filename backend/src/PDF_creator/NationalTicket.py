@@ -70,3 +70,5 @@ class NationalTicket(BaseTicket):
         pdf.image("Temp/sample.png",w=30,h=30)
 
         pdf.output('NewTicket.pdf', 'F')
+
+        os.chdir('../..')
