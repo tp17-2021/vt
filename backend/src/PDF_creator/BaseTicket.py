@@ -1,10 +1,3 @@
-import os
-import qrcode
-from fpdf import FPDF
-from PIL import Image
-from escpos.printer import Network
-from pdf2image import convert_from_path
-
 
 class BaseTicket(object):
     """ Base ticket class for saving vote data and preprocess text """

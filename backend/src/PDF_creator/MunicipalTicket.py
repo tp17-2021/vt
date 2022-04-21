@@ -1,11 +1,9 @@
-from fpdf import FPDF
+import os
 import qrcode
-from PIL import Image
-from escpos.printer import Network
-from pdf2image import convert_from_path
+
+from fpdf import FPDF
 
 from src.PDF_creator.BaseTicket import BaseTicket
-
 
 class MunicipalTicket(BaseTicket):
     """ Class for ticket from vote to Municipal local concil """
