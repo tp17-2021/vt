@@ -18,7 +18,7 @@ from unittest import mock
 # from src.main import send_token_to_gateway
 
 from src.PDF_creator.NationalTicket import NationalTicket
-from src.vote_transformer import transform_vote_to_print
+from src.utils import transform_vote_to_print
 
 with mock.patch.dict(os.environ, os.environ):
     from src.main import app
