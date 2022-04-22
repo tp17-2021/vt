@@ -42,4 +42,4 @@ services:
     depends_on:
       - vt-backend
     ports:
-      - 81:80
+      - 127.0.0.1:81:80

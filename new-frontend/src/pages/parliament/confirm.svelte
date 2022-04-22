@@ -2,7 +2,6 @@
     import Button from "../../lib/components/buttons/Button.svelte";
     import {goto} from "@roxi/routify";
     import {vote} from "../../api/stores";
-    import {sendVoteParliament} from "../../api/rest";
     import CandidateBox from "../../lib/components/CandidateBox.svelte";
     import PartyBox from "../../lib/components/PartyBox.svelte";
     import {findCandidateById, findPartyById} from "../../lib/helpers";
@@ -10,15 +9,8 @@
     import BackButton from "../../lib/components/buttons/BackButton.svelte";
     import ButtonsContainer from "../../lib/components/buttons/ButtonsContainer.svelte";
 
-    function confirm() {
-        sendVoteParliament()
-            .then(() => {
-                // will be sent as a WS message from the server
-                // $goto("/parliament/success");
-            })
-            .catch(() => {
-                $goto("/parliament/error");
-            });
+    async function confirm() {
+        $goto("/parliament/printing");
     }
 
     function changeVote() {
