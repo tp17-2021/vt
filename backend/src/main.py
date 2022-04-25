@@ -106,7 +106,7 @@ async def startup_event():
         imports.election_state = ElectionStates.WAITING_FOR_NFC_TAG
     else:
         r = requests.post(
-            os.environ['HYPERTEXT_PROTOCOL'] + os.environ['VOTING_PROCESS_MANAGER_PATH'] + '/register-vt',
+            os.environ['VOTING_PROCESS_MANAGER_PATH'] + '/register-vt',
             json={
                 'public_key': public_key
             }
@@ -139,7 +139,7 @@ async def startup_event():
         with open('/idk_data/my_id.txt', 'w') as f:
             f.write(str(my_id))
 
-        websocket_host = os.environ['HYPERTEXT_PROTOCOL'] + os.environ['VOTING_PROCESS_MANAGER_HOST']
+        websocket_host = os.environ['VOTING_PROCESS_MANAGER_HOST']
         print("host",websocket_host, "path", os.environ['VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH'])
         await sio.connect(
             websocket_host,
