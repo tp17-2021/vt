@@ -132,15 +132,6 @@ async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
         'vote': vote
     }
 
-    print_vote_ = await transform_vote_to_print(vote)
-    printing_data = {
-        'token': token,
-        'vote': print_vote_
-    }
-
-    await prepare_printing_vote(printing_data)
-    await print_ticket_out()
-
     encrypted_data = encrypt_message(data)
 
     with open('/idk_data/my_id.txt', 'r') as f:
@@ -155,3 +146,13 @@ async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
     )
 
     r.raise_for_status()
+
+    print_vote_ = await transform_vote_to_print(vote)
+    printing_data = {
+        'token': token,
+        'vote': print_vote_
+    }
+
+    await prepare_printing_vote(printing_data)
+    await print_ticket_out()
+
