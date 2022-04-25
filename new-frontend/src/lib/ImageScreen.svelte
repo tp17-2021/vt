@@ -35,12 +35,15 @@
     import {url} from "@roxi/routify";
 
     export let icon: icons = icons.SUCCESS
+    export let only_slots = false;
     export let title = ""
 </script>
 
 
 <div class="imageScreen">
-    <img src={$url(`/img/icons/${icon}.png`)} alt="">
-    <div class="title">{title}</div>
+    {#if !only_slots}
+      <img src={$url(`/img/icons/${icon}.png`)} alt="">
+    {/if}
     <slot></slot>
+    <div class="title">{title}</div>
 </div>
