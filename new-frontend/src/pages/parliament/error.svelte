@@ -17,7 +17,7 @@
 </style>
 
 <ImageScreen icon={icons.ERROR} title="Váš hlas nebol započítaný">
-    <p>Nastala chyba. Prosím skúste zahlasovať znova alebo zavolajte obsluhu</p>
+  <p>Nastala chyba. Prosím skúste zahlasovať znova alebo zavolajte obsluhu</p>
 <!--    <div class="pb-3">Nastala chyba, <b>prosím zavolajte obsluhu</b></div>-->
 <!--    <Button on:click={goHome}>-->
 <!--        <i class="fas fa-home"></i> Späť domov-->
