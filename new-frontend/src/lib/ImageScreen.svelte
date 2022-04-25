@@ -22,12 +22,24 @@
     margin-bottom: 1rem;
     width: 50%;
     height: auto;
+    max-height: 30vh;
+
+    // keep aspect ratio
+    object-fit: contain;
   }
 
   .title {
     font-size: 1.5rem;
     margin-bottom: 3rem;
   }
+}
+
+
+.imagescreen-wrapper {
+  height: calc(100vh - 150px);
+  max-height: 50vh;
+  display: grid;
+  place-items: center;
 }
 </style>
 
@@ -38,9 +50,10 @@
   export let title = ""
 </script>
 
-
-<div class="imageScreen">
-  <img src={$url(`/img/icons/${icon}.png`)} alt="">
-  <div class="title">{title}</div>
-  <slot></slot>
+<div class="imagescreen-wrapper">
+  <div class="imageScreen">
+    <img src={$url(`/img/icons/${icon}.png`)} alt="">
+    <div class="title">{title}</div>
+    <slot></slot>
+  </div>
 </div>
