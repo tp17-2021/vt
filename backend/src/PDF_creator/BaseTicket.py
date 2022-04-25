@@ -36,7 +36,7 @@ class BaseTicket(object):
 
         counter = 0
         string_candidates_broken_lines = ""
-        for i in string_final:
+        for i in string_candidates:
             if i == '\n':
                 counter = 0
                 string_candidates_broken_lines += i
