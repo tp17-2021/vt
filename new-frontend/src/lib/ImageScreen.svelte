@@ -16,6 +16,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
 
   img {
     margin-top: 3rem;
@@ -40,6 +41,8 @@
   max-height: 50vh;
   display: grid;
   place-items: center;
+  width: 100%;
+
 }
 </style>
 
