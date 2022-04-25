@@ -1,6 +1,5 @@
-
 import src.imports as imports
-from src.imports import ElectionStates, app, get_validated_token, set_validated_token
+from src.imports import ElectionStates, app
 
 import src.gateway_communication
 from src.gateway_communication import receive_config_from_gateway

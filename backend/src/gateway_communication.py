@@ -1,11 +1,12 @@
-import os
 import requests
+import asyncio
+import json
 
 import src.imports as imports
-from src.imports import ElectionStates, app, get_validated_token, set_validated_token, sio
+from src.imports import ElectionStates, get_validated_token, sio
 
 import src.utils
-from src.utils import transform_vote_to_print, get_config, encrypt_message, prepare_printing_vote, reg_printer, print_ticket_out
+from src.utils import transform_vote_to_print, encrypt_message, prepare_printing_vote, reg_printer, print_ticket_out
 
 async def receive_config_from_gateway() -> None:
     """ Method for receiving election config from gateway """

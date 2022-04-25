@@ -1,12 +1,17 @@
+import asyncio
+import sys
+import json
+import time
+import uvicorn
+import requests
+
 import src.imports as imports
 from src.imports import *
 
 from electiersa import electiersa
 
-from src.PDF_creator.NationalTicket import NationalTicket
-
 import src.utils
-from src.utils import transform_vote_to_print, get_config, encrypt_message, prepare_printing_vote, reg_printer, print_ticket_out
+from src.utils import get_config
 
 import src.schemas.votes
 from src.schemas.votes import VotePartial
@@ -106,7 +111,7 @@ async def startup_event():
         imports.election_state = ElectionStates.WAITING_FOR_NFC_TAG
     else:
         r = requests.post(
-            os.environ['HYPERTEXT_PROTOCOL'] + os.environ['VOTING_PROCESS_MANAGER_PATH'] + '/register-vt',
+            os.environ['VOTING_PROCESS_MANAGER_PATH'] + '/register-vt',
             json={
                 'public_key': public_key
             }
@@ -139,7 +144,7 @@ async def startup_event():
         with open('/idk_data/my_id.txt', 'w') as f:
             f.write(str(my_id))
 
-        websocket_host = os.environ['HYPERTEXT_PROTOCOL'] + os.environ['VOTING_PROCESS_MANAGER_HOST']
+        websocket_host = os.environ['VOTING_PROCESS_MANAGER_HOST']
         print("host",websocket_host, "path", os.environ['VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH'])
         await sio.connect(
             websocket_host,
