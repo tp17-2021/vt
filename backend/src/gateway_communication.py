@@ -21,7 +21,7 @@ async def receive_config_from_gateway() -> None:
 
     else:
         r = requests.get(
-            os.environ['HYPERTEXT_PROTOCOL'] + os.environ['STATE_VECTOR_PATH'] + "/config/config.json",
+            os.environ['STATE_VECTOR_PATH'] + "/config/config.json",
         )
 
         with open(config_file_path, 'wb') as f:
@@ -75,7 +75,7 @@ async def send_token_to_gateway(token: str) -> None:
         my_id = f.read()
 
     r = requests.post(
-        os.environ['HYPERTEXT_PROTOCOL'] + os.environ['VOTING_SERVICE_PATH'] + "/api/token-validity",
+        os.environ['VOTING_SERVICE_PATH'] + "/api/token-validity",
         json={
             'payload': encrypted_data.__dict__,
             'voting_terminal_id': my_id,
@@ -138,7 +138,7 @@ async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
         my_id = f.read()
 
     r = requests.post(
-        os.environ['HYPERTEXT_PROTOCOL'] + os.environ['VOTING_SERVICE_PATH'] + "/api/vote",
+        os.environ['VOTING_SERVICE_PATH'] + "/api/vote",
         json={
             'payload': encrypted_data.__dict__,
             'voting_terminal_id': my_id,

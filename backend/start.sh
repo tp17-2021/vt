@@ -5,7 +5,8 @@ then
 
 else
     # generate python vote class from json spec
-    datamodel-codegen --url https://$STATE_VECTOR_PATH/config/datamodels.yaml --output /code/src/schemas/votes.py
+    datamodel-codegen --url http://$STATE_VECTOR_PATH/config/datamodels.yaml --output /code/src/schemas/votes.py
+    # datamodel-codegen --url https://$STATE_VECTOR_PATH/config/datamodels.yaml --output /code/src/schemas/votes.py
 
 fi
 
