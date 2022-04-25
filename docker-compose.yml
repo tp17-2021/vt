@@ -11,18 +11,11 @@ services:
     environment:
       - ROOT_PATH=/backend
       - VOTING_SERVICE_PATH=http://host.docker.internal:8080/voting-service-api
-      # - VOTING_SERVICE_PATH=https://team17-21.studenti.fiit.stuba.sk/gateway/voting-service-api
       - STATE_VECTOR_PATH=http://host.docker.internal:8080/statevector
-      # - STATE_VECTOR_PATH=team17-21.studenti.fiit.stuba.sk/gateway/statevector
 
       - VOTING_PROCESS_MANAGER_HOST=http://host.docker.internal:8080
       - VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH=voting-process-manager-api/ws/socket.io
       - VOTING_PROCESS_MANAGER_PATH=http://host.docker.internal:8080/voting-process-manager-api
-      # - VOTING_PROCESS_MANAGER_HOST=https://team17-21.studenti.fiit.stuba.sk
-      # - VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH=gateway/voting-process-manager-api/ws/socket.io
-      # - VOTING_PROCESS_MANAGER_PATH=https://team17-21.studenti.fiit.stuba.sk/gateway/voting-process-manager-api
-
-
 
       - PRINTER_IP_ADDRESS=192.168.0.168
       - VT_ONLY_DEV=0
