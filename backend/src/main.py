@@ -1,5 +1,5 @@
 import src.imports as imports
-from src.imports import * # this is against our style but whatever
+from src.imports import *
 
 from electiersa import electiersa
 
@@ -18,8 +18,6 @@ import src.gateway_communication
 from src.gateway_communication import receive_config_from_gateway, send_current_election_state_to_gateway, \
                                         send_token_to_gateway, send_vote_to_gateway 
 
-
-
 socket_manager = SocketManager(app=app)
 
 imports.__validated_token = "valid"
@@ -30,10 +28,13 @@ imports.registered_printer = False
 
 @sio.event
 def connect():
+    """ Hello world """
     print("I'm connected! SID", sio.sid)
+
 
 @sio.on('actual_state')
 async def on_actual_state_message(data):
+    """ Method for communicating actual election state of VT backend to gateway and frontend """
     print('recieved actual_state!', data)
     state = data['state']
 
@@ -43,6 +44,7 @@ async def on_actual_state_message(data):
 
 @app.sio.on('join')
 async def handle_join(sid, *args, **kwargs):
+    """ Method for sending info to frontend about connecting gateway with frontend """
     await send_current_election_state_to_frontend()
 
 
@@ -51,14 +53,6 @@ async def hello ():
     """ Sample testing endpoint """
 
     return {'message': 'Hello from VT backend!'}
-
-
-@repeat_every(seconds=5)  # 1 minute
-async def check_waiting_for_tag() -> None:
-    
-    # Do not wait for tag if in this mode
-    if  'DONT_WAIT_FOR_TOKEN' in os.environ and os.environ['DONT_WAIT_FOR_TOKEN'] == '1' and imports.election_state == ElectionStates.WAITING_FOR_NFC_TAG:
-        await test_token_valid()
 
 
 @app.post('/api/vote_generated', status_code=200)
@@ -110,7 +104,6 @@ async def startup_event():
             f.write(str('vtdev1'))
             
         imports.election_state = ElectionStates.WAITING_FOR_NFC_TAG
-
     else:
         r = requests.post(
             os.environ['HYPERTEXT_PROTOCOL'] + os.environ['VOTING_PROCESS_MANAGER_PATH'] + '/register-vt',
@@ -146,7 +139,6 @@ async def startup_event():
         with open('/idk_data/my_id.txt', 'w') as f:
             f.write(str(my_id))
 
-        # connect to gateway websocket
         websocket_host = os.environ['HYPERTEXT_PROTOCOL'] + os.environ['VOTING_PROCESS_MANAGER_HOST']
         print("host",websocket_host, "path", os.environ['VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH'])
         await sio.connect(
@@ -160,7 +152,6 @@ async def startup_event():
     await send_current_election_state_to_gateway()
 
 
-# post method for recieving token from client
 @app.post('/token', status_code=200)
 async def token(
     token: str = Body(...),
@@ -176,11 +167,6 @@ async def token(
     await send_token_to_gateway(token)
 
 
-@app.get("/get_config_from_gateway")
-async def test_getting_config():
-    await receive_config_from_gateway()
-
-
 @app.post('/api/election/state')
 async def receive_current_election_state_from_gateway(state: dict) -> None:
     """
@@ -193,14 +179,12 @@ async def receive_current_election_state_from_gateway(state: dict) -> None:
     await change_state_and_send_to_frontend(state['status'])
 
 
-# This is for future usage, please keep it here, in final code, this won't be here :)
-
-# TESTING
 @app.get("/test_token_valid")
 async def test_token_valid():
     """
-    TESTING - set election state to ElectionStates.TOKEN_VALID
+    DEVELOPING USAGE - set election state to ElectionStates.TOKEN_VALID
     Used for testing purposes to unlock frontend
+    
     """
     await change_state_and_send_to_frontend(ElectionStates.TOKEN_VALID)
 
@@ -208,25 +192,48 @@ async def test_token_valid():
 @app.get("/test_token_invalid")
 async def test_token_invalid():
     """
-    TESTING - set election state to ElectionStates.TOKEN_NOT_VALID
+    DEVELOPING USAGE - set election state to ElectionStates.TOKEN_NOT_VALID
     Used for testing purposes to lock frontend
+
     """
     await change_state_and_send_to_frontend(ElectionStates.TOKEN_NOT_VALID)
+
 
 @app.get("/test_election_start")
 async def test_election_start():
     """
-    TESTING - set election state to ElectionStates.WAITING_FOR_NFC_TAG
+    DEVELOPING USAGE - set election state to ElectionStates.WAITING_FOR_NFC_TAG
+
     """
     await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
+
 
 @app.get("/test_election_stop")
 async def test_election_stop():
     """
-    TESTING - set election state to ElectionStates.ELECTIONS_NOT_STARTED
+    DEVELOPING USAGE - set election state to ElectionStates.ELECTIONS_NOT_STARTED
+
     """
     await change_state_and_send_to_frontend(ElectionStates.ELECTIONS_NOT_STARTED)
 
+
+@app.get("/get_config_from_gateway")
+async def test_getting_config():
+    """
+    DEVELOPING USAGE - getting config from gateway
+
+    """
+    await receive_config_from_gateway()
+
+
+@repeat_every(seconds=5)
+async def check_waiting_for_tag() -> None:
+    """ 
+    DEVELOPING USAGE - This method approve user to go voting even without NFC reader
+
+    """
+    if  'DONT_WAIT_FOR_TOKEN' in os.environ and os.environ['DONT_WAIT_FOR_TOKEN'] == '1' and imports.election_state == ElectionStates.WAITING_FOR_NFC_TAG:
+        await test_token_valid()
 
 if __name__ == '__main__':
     uvicorn.run('main:app', host='127.0.0.1', port=80)

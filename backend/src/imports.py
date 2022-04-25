@@ -23,10 +23,9 @@ from electiersa import electiersa
 app = FastAPI(root_path=os.environ['ROOT_PATH'])
 app.mount("/public", StaticFiles(directory="src/public"), name="public")
 
-# enum for election_states
 class ElectionStates(object):
-    ELECTIONS_NOT_STARTED = 'elections_not_started'     # elections are disabled
-    WAITING_FOR_NFC_TAG = 'waiting_for_scan'            # elections are enabled and waiting for NFC tag to be scanned
+    ELECTIONS_NOT_STARTED = 'elections_not_started'     # Elections are disabled
+    WAITING_FOR_NFC_TAG = 'waiting_for_scan'            # Elections are enabled and waiting for NFC tag to be scanned
     TOKEN_VALID = 'token_valid'                         # NFC tag was scanned and is valid - user is currently choosing their vote
     TOKEN_NOT_VALID = 'token_not_valid'                 # NFC tag was scanned, but is not valid
     VOTE_SUCCESS = 'vote_success'                       # (Only if TOKEN_VALID) Vote was successfully casted to the gateway
@@ -38,10 +37,18 @@ vt_id = None
 __validated_token = "valid"
 registered_printer = False
 
+sio = socketio.AsyncClient(
+    reconnection=True,
+    reconnection_attempts=3,
+    logger=True,
+    engineio_logger=True
+)
+
 def get_validated_token() -> str:
-    """Getter for validated token"""
+    """ Getter for validated token """
 
     return __validated_token
+
 
 def set_validated_token(token) -> None:
     """
@@ -53,10 +60,3 @@ def set_validated_token(token) -> None:
     """
 
     __validated_token = token
-
-sio = socketio.AsyncClient(
-    reconnection=True,
-    reconnection_attempts=3,
-    logger=True,
-    engineio_logger=True
-)

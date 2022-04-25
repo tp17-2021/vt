@@ -10,19 +10,12 @@ import requests_mock
 
 from fastapi.testclient import TestClient
 from unittest import mock
-# import src.main
-# from src.main import app
-# from src.main import election_config
-# from src.main import election_state
-# from src.main import send_vote_to_gateway
-# from src.main import send_token_to_gateway
 
 from src.PDF_creator.NationalTicket import NationalTicket
 from src.utils import transform_vote_to_print
 
 with mock.patch.dict(os.environ, os.environ):
     from src.main import app
-
 
 @pytest.fixture
 def client ():
@@ -41,6 +34,7 @@ def mock_get_config(mocker):
 @pytest.mark.asyncio
 async def test_default():
     assert 1 == 1
+
 
 @pytest.mark.asyncio
 async def test_create_pdf():
@@ -84,8 +78,6 @@ async def test_cut_lines_to_max_length():
 
 @pytest.mark.asyncio
 async def test_create_vote_from_config(client):
-    
-    print(os.listdir())
     vote = {'party_id': 0, 'candidate_ids': [4, 3, 2, 1]}
 
     vote_to_print = {
@@ -97,7 +89,3 @@ async def test_create_vote_from_config(client):
     res = await transform_vote_to_print(vote)
 
     assert res == vote_to_print
-
-
-
-

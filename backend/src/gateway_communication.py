@@ -8,17 +8,14 @@ import src.utils
 from src.utils import transform_vote_to_print, get_config, encrypt_message, prepare_printing_vote, reg_printer, print_ticket_out
 
 async def receive_config_from_gateway() -> None:
-    """
-    Method for receiving election config from gateway
+    """ Method for receiving election config from gateway """
 
-    """
     config_file_path = os.path.join(os.getcwd(), './src/public/config.json')
 
-    # use local config.json while in dev mode
+    # Use local config.json while in dev mode
     if  'VT_ONLY_DEV' in os.environ and os.environ['VT_ONLY_DEV'] == '1':
         with open(config_file_path, 'wb') as f, open('/code/tests/config.json', 'rb') as f2:
             f.write(f2.read())
-
     else:
         r = requests.get(
             os.environ['STATE_VECTOR_PATH'] + "/config/config.json",
@@ -29,15 +26,11 @@ async def receive_config_from_gateway() -> None:
 
 
 async def send_current_election_state_to_gateway() -> None:
-    """
-    Method for sending election state to gateway
-
-    """
+    """ Method for sending election state to gateway """
 
     if  'VT_ONLY_DEV' in os.environ and os.environ['VT_ONLY_DEV'] == '1':
         return
 
-    # Emit event to gateway
     print("emiting status", imports.election_state)
     await sio.emit('vt_stauts',
         {
@@ -48,7 +41,6 @@ async def send_current_election_state_to_gateway() -> None:
     )
 
 
-
 async def send_token_to_gateway(token: str) -> None:
     """
     Method for sending token to gateway to validate it
@@ -57,8 +49,7 @@ async def send_token_to_gateway(token: str) -> None:
     token -- token that voter used in NFC reader
 
     """
-
-    # dont valid token on G while dev mode
+    # Dont valid token on G while dev mode
     if  'VT_ONLY_DEV' in os.environ and os.environ['VT_ONLY_DEV'] == '1':
         if token == 'invalid':
             await change_state_and_send_to_frontend(ElectionStates.TOKEN_NOT_VALID)
@@ -86,13 +77,11 @@ async def send_token_to_gateway(token: str) -> None:
         await change_state_and_send_to_frontend(ElectionStates.TOKEN_VALID)
 
         imports.__validated_token = token
-
     else:
         await change_state_and_send_to_frontend(ElectionStates.TOKEN_NOT_VALID)
         await asyncio.sleep(5)
         if imports.election_state == ElectionStates.TOKEN_NOT_VALID:
             await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
-
 
 
 async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
@@ -104,20 +93,18 @@ async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
     vote -- vote object that user created in his action
 
     """
-    # skip while on dev mode
-
+    # Skip while on dev mode
     if imports.registered_printer == False:
         await reg_printer()
         imports.registered_printer = True
     
     if  'VT_ONLY_DEV' in os.environ and os.environ['VT_ONLY_DEV'] == '1':
-
         token = get_validated_token()
 
-        print_vote_ = await transform_vote_to_print(vote)
+        processed_printing_vote = await transform_vote_to_print(vote)
         printing_data = {
             'token': token,
-            'vote': print_vote_
+            'vote': processed_printing_vote
         }
 
         await prepare_printing_vote(printing_data)
@@ -147,12 +134,11 @@ async def send_vote_to_gateway(vote: dict, status_code=200) -> None:
 
     r.raise_for_status()
 
-    print_vote_ = await transform_vote_to_print(vote)
+    processed_printing_vote = await transform_vote_to_print(vote)
     printing_data = {
         'token': token,
-        'vote': print_vote_
+        'vote': processed_printing_vote
     }
 
     await prepare_printing_vote(printing_data)
     await print_ticket_out()
-

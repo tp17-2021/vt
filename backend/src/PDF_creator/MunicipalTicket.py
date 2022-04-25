@@ -15,7 +15,7 @@ class MunicipalTicket(BaseTicket):
         Keyword arguments:
         data -- Dictionary of data, which contains whole vote
 
-         """
+        """
         super().__init__(data)
 
 
