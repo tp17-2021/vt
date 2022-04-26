@@ -9,6 +9,7 @@
     import PaginationLinks from "../../lib/components/pagination/PaginationLinks.svelte";
     import Warning from "../../lib/components/Warning.svelte";
     import Modal from "../../lib/components/Modal.svelte";
+    import VirtualInput from "../../lib/components/VirtualInput.svelte";
 
     function chooseParty(party) {
         if (party == null) {
@@ -51,7 +52,16 @@
 
     // modals
     let openModal
-    
+    let searchValue = ""
+
+    function searchValueChanged(searchValue) {
+        console.log("searching", searchValue);
+        paginationObject.currentPageNumber = 1
+        paginationObject.searchTerm = searchValue
+        paginateParties()
+    }
+
+    $: searchValueChanged(searchValue);
 </script>
 
 <style>
@@ -66,11 +76,12 @@
 </style>
 
 <h2>Kandidujúce strany:</h2>
-<input type="text" id="search" placeholder="Vyhľadajte kandidujúcu stranu" on:input={e => {
-    paginationObject.currentPageNumber = 1
-    paginationObject.searchTerm = e.target.value
-    paginateParties(paginationObject)
-}}>
+<VirtualInput bind:value={searchValue} type="text" id="search" placeholder="Vyhľadajte kandidujúcu stranu"/>
+<!--<input type="text" id="search" placeholder="Vyhľadajte kandidujúcu stranu" on:input={e => {-->
+<!--    paginationObject.currentPageNumber = 1-->
+<!--    paginationObject.searchTerm = e.target.value-->
+<!--    paginateParties(paginationObject)-->
+<!--}}>-->
 
 <p><i>Kliknutím označte stranu, ktorú chcete voliť.</i></p>
 <div class="parties">

@@ -27,6 +27,14 @@
       font-weight: bold;
     }
 
+    > span {
+      /*clamp to 2 rows*/
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
     &.chosen {
       background-color: var(--yellow);
     }

@@ -9,6 +9,7 @@
     import BackButton from "../../lib/components/buttons/BackButton.svelte";
     import Modal from "../../lib/components/Modal.svelte";
     import Warning from "../../lib/components/Warning.svelte";
+    import VirtualInput from "../../lib/components/VirtualInput.svelte";
 
 
 
@@ -64,6 +65,15 @@
     // --- modal ---
     let openErrorModal;
     let openConfirmModal;
+    let searchValue = ""
+
+    function searchValueChanged(searchValue: string) {
+        paginationObject.currentPageNumber = 1
+        paginationObject.searchTerm = searchValue
+        paginateCandidates()
+    }
+
+    $: searchValueChanged(searchValue)
 </script>
 
 <style lang="scss">
@@ -152,11 +162,7 @@
 
 <h2>Kandidáti</h2>
 
-<input type="text" id="search" placeholder="Vyhľadajte kandidáta" on:input={e => {
-    paginationObject.currentPageNumber = 1
-    paginationObject.searchTerm = e.target.value
-    paginateCandidates(paginationObject)
-}}>
+<VirtualInput bind:value={searchValue} type="text" id="search" placeholder="Vyhľadajte kandidáta"/>
 
 <p><i>Kliknutím označte 5 poslancov, ktorých chcete voliť.</i></p>
 <div class="candidates">
