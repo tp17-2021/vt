@@ -10,7 +10,7 @@
   .candidate {
     display: grid;
     grid-template-columns: 20fr 5fr 7fr 15fr 7fr;
-    gap: 10px;
+    gap: 20px;
 
     align-items: center;
 
@@ -25,6 +25,20 @@
     .name {
       font-size: 1.25rem;
       font-weight: bold;
+
+      display: grid;
+
+      grid-template-columns: 1fr 5fr;
+      gap: 10px;
+
+      .order {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        //width: 40px;
+        //display: inline-block;
+        text-align: right;
+      }
     }
 
     > span {
@@ -34,6 +48,8 @@
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
+
+
 
     &.chosen {
       background-color: var(--yellow);
@@ -47,7 +63,11 @@
             <Checkbox checked={isSelected} size={40}/>
         </div>
     {/if}
-    <span class="name">{candidate.order}. {candidate.first_name} {candidate.last_name}</span>
+    <span class="name">
+        <span class="order"> {candidate.order}. </span>
+        <span class="candidate-name">{candidate.first_name} {candidate.last_name}</span>
+
+    </span>
     <span>{candidate.degrees_before}</span>
     <span>{candidate.age} rokov</span>
     <span>{candidate.occupation}</span>

@@ -25,6 +25,12 @@
     .chosen-candidates {
         margin-bottom: 1rem;
     }
+    .cancelYes {
+        margin-top: 2rem;
+        display: flex;
+        justify-content: end;
+        gap: 1rem;
+    }
 </style>
 
 <BackButton/>
@@ -45,9 +51,13 @@
         <CandidateBox candidate={findCandidateById(party.candidates, candidate_id)}/>
     {/each}
 </div>
-<ButtonsContainer>
-    <Button on:click={confirm} type="primary">Odoslať hlas</Button>
+
+<div class="cancelYes">
     <Button on:click={changeVote}>Chcem upraviť svoju voľbu</Button>
+    <Button on:click={confirm} type="primary">Odoslať hlas</Button>
+</div>
+<ButtonsContainer>
+
 </ButtonsContainer>
 
 
