@@ -44,8 +44,14 @@ class BaseTicket(object):
             else:
                 if counter == max_line_len:
                     counter = 0
-                    string_candidates_broken_lines += '-\n'
-                    string_candidates_broken_lines += i
+                    if i not in ['(',')','-',' ']:
+                        string_candidates_broken_lines += '-\n'
+                        string_candidates_broken_lines += i
+                    else:
+                        string_candidates_broken_lines += '\n'
+                        if i not in [' ']:
+                            string_candidates_broken_lines += i
+
                 else:
                     counter += 1
                     string_candidates_broken_lines += i

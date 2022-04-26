@@ -45,9 +45,9 @@ class NationalTicket(BaseTicket):
         party_str = BaseTicket.preprocessText(
             self,
             self.voting_data['party'],
-            40
+            45
         )
-        pdf.multi_cell(0,2,party_str)
+        pdf.multi_cell(0,3,party_str)
 
         pdf.set_xy(0,22)
         pdf.set_font('slovakBold','',9)
@@ -58,7 +58,7 @@ class NationalTicket(BaseTicket):
         candidates = BaseTicket.preprocessText(
             self,
             self.voting_data['candidates'],
-            25
+            30
         )
         pdf.multi_cell(40, 5,candidates)
 
