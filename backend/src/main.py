@@ -184,53 +184,6 @@ async def receive_current_election_state_from_gateway(state: dict) -> None:
     await change_state_and_send_to_frontend(state['status'])
 
 
-@app.get("/test_token_valid")
-async def test_token_valid():
-    """
-    DEVELOPING USAGE - set election state to ElectionStates.TOKEN_VALID
-    Used for testing purposes to unlock frontend
-    
-    """
-    await change_state_and_send_to_frontend(ElectionStates.TOKEN_VALID)
-
-
-@app.get("/test_token_invalid")
-async def test_token_invalid():
-    """
-    DEVELOPING USAGE - set election state to ElectionStates.TOKEN_NOT_VALID
-    Used for testing purposes to lock frontend
-
-    """
-    await change_state_and_send_to_frontend(ElectionStates.TOKEN_NOT_VALID)
-
-
-@app.get("/test_election_start")
-async def test_election_start():
-    """
-    DEVELOPING USAGE - set election state to ElectionStates.WAITING_FOR_NFC_TAG
-
-    """
-    await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
-
-
-@app.get("/test_election_stop")
-async def test_election_stop():
-    """
-    DEVELOPING USAGE - set election state to ElectionStates.ELECTIONS_NOT_STARTED
-
-    """
-    await change_state_and_send_to_frontend(ElectionStates.ELECTIONS_NOT_STARTED)
-
-
-@app.get("/get_config_from_gateway")
-async def test_getting_config():
-    """
-    DEVELOPING USAGE - getting config from gateway
-
-    """
-    await receive_config_from_gateway()
-
-
 @repeat_every(seconds=5)
 async def check_waiting_for_tag() -> None:
     """ 
