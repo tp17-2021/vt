@@ -16,12 +16,9 @@ class NationalTicket(BaseTicket):
         Keyword arguments:
         data -- Dictionary of data, which contains whole vote
 
-         """
+        """
         super().__init__(data)
 
-    def print_ticket(self, path: str):
-        """ Method for creating PDF file from vote """
-        super().print_ticket(path)
 
     def create_pdf(self):
         """ Method for creating PDF file from vote """
@@ -48,9 +45,9 @@ class NationalTicket(BaseTicket):
         party_str = BaseTicket.preprocessText(
             self,
             self.voting_data['party'],
-            40
+            45
         )
-        pdf.multi_cell(0,2,party_str)
+        pdf.multi_cell(0,3,party_str)
 
         pdf.set_xy(0,22)
         pdf.set_font('slovakBold','',9)
@@ -61,9 +58,9 @@ class NationalTicket(BaseTicket):
         candidates = BaseTicket.preprocessText(
             self,
             self.voting_data['candidates'],
-            21
+            30
         )
-        pdf.multi_cell(35, 5,candidates)
+        pdf.multi_cell(40, 5,candidates)
 
         pdf.set_xy(43,22)
 
@@ -72,5 +69,6 @@ class NationalTicket(BaseTicket):
         img.save("Temp/sample.png")
         pdf.image("Temp/sample.png",w=30,h=30)
 
-        print('*************')
         pdf.output('NewTicket.pdf', 'F')
+
+        os.chdir('../..')

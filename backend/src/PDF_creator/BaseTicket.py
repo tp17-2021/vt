@@ -1,13 +1,6 @@
-import os
-import qrcode
-from fpdf import FPDF
-from PIL import Image
-from escpos.printer import Network
-from pdf2image import convert_from_path
-
 
 class BaseTicket(object):
-    """ Base ticket class for saving vote data and preprocess text """
+    """ Base ticket class for saving vote data and preprocessing text """
     voting_data = {}
 
     def __init__(self, data: dict) -> None:
@@ -21,52 +14,46 @@ class BaseTicket(object):
         self.voting_data = data['vote']
         self.voting_data_token = data
 
-    def print_ticket(self, path: str): 
-        """ Method for creating PDF file from vote """
-
-        
-        images = convert_from_path(path)
-
-        for i in range(len(images)):
-            images[i].save('ticket.jpg', 'JPEG')
-
-        printer = Network(os.environ['PRINTER_IP_ADDRESS'])
-        printer.image('ticket.jpg')
-        printer.cut()
 
     def preprocessText(self, candidates: list, max_line_len: int) -> str:
         """
-        Method for preprocessing text before priting into PDF.
-        Text have to be manully cut with '-' to be in readable form.
+        Method for preprocessing text before printing into PDF.
+        Text have to be manually cut with '-' to be in readable form.
 
         Keyword arguments:
         candidates -- List of candidates that will be printed
         max_line_len -- Maximal length of row which will be printed
 
         """
-        string_final = ""
+        string_candidates = ""
 
         if type(candidates) == list:
             for i in candidates:
-                string_final += i
-                string_final += '\n'
+                string_candidates += i
+                string_candidates += '\n'
         else:
-            string_final = candidates
+            string_candidates = candidates
 
         counter = 0
-        string_final_two = ""
-        for i in string_final:
+        string_candidates_broken_lines = ""
+        for i in string_candidates:
             if i == '\n':
                 counter = 0
-                string_final_two += i
+                string_candidates_broken_lines += i
                 continue
             else:
                 if counter == max_line_len:
                     counter = 0
-                    string_final_two += '-\n'
-                    string_final_two += i
+                    if i not in ['(',')','-',' ']:
+                        string_candidates_broken_lines += '-\n'
+                        string_candidates_broken_lines += i
+                    else:
+                        string_candidates_broken_lines += '\n'
+                        if i not in [' ']:
+                            string_candidates_broken_lines += i
+
                 else:
                     counter += 1
-                    string_final_two += i
+                    string_candidates_broken_lines += i
 
-        return string_final_two
+        return string_candidates_broken_lines

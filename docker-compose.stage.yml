@@ -10,20 +10,20 @@ services:
     restart: unless-stopped
     environment:
       - ROOT_PATH=/vt/backend
-      - VOTING_SERVICE_PATH=host.docker.internal:8101/voting-service-api
-      - STATE_VECTOR_PATH=host.docker.internal:8101/statevector
-      - VOTING_PROCESS_MANAGER_HOST=host.docker.internal:8101
+      - VOTING_SERVICE_PATH=http://host.docker.internal:8101/voting-service-api
+      - STATE_VECTOR_PATH=http://host.docker.internal:8101/statevector
+      - VOTING_PROCESS_MANAGER_HOST=http://host.docker.internal:8101
       - VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH=voting-process-manager-api/ws/socket.io
-      - VOTING_PROCESS_MANAGER_PATH=host.docker.internal:8101/voting-process-manager-api
+      - VOTING_PROCESS_MANAGER_PATH=http://host.docker.internal:8101/voting-process-manager-api
       - PRINTER_IP_ADDRESS=192.168.0.168
       - VT_ONLY_DEV=1
       - DONT_WAIT_FOR_TOKEN=1
 
   vt-frontend:
-      build:
-        context: ./new-frontend
-        dockerfile: ./Dockerfile
-        args:
-          vite_base_path: /vt/frontend
-      ports:
-        - 8100:80
+    build:
+      context: ./new-frontend
+      dockerfile: ./Dockerfile
+      args:
+        vite_base_path: /vt/frontend
+    ports:
+      - 8100:80

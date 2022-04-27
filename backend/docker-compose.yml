@@ -15,8 +15,8 @@ services:
     restart: unless-stopped
     environment:
       - ROOT_PATH=/backend
-      - VOTING_SERVICE_PATH=host.docker.internal:8080/voting-service-api
-      - STATE_VECTOR_PATH=host.docker.internal:8080/statevector
+      - VOTING_SERVICE_PATH=team17-21.studenti.fiit.stuba.sk/gateway/voting-service-api
+      - STATE_VECTOR_PATH=team17-21.studenti.fiit.stuba.sk/gateway/statevector
     # export useful environment variables to the service's container
     # network_mode: host
     volumes:

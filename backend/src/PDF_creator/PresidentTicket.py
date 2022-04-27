@@ -1,9 +1,9 @@
-from fpdf import FPDF
+import os
 import qrcode
-from PIL import Image
+
+from fpdf import FPDF
 
 from src.PDF_creator.BaseTicket import BaseTicket
-
 
 class PresidentTicket(BaseTicket):
     """ Class for ticket from vote with President candidate """
@@ -15,12 +15,9 @@ class PresidentTicket(BaseTicket):
         Keyword arguments:
         data -- Dictionary of data, which contains whole vote
 
-         """
+        """
         super().__init__(data)
 
-
-    def print_ticket(self, path: str):
-        super().print_ticket(path)
 
     def Create_pdf(self):
         """ Method for creating PDF file from vote """
