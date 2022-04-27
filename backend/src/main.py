@@ -55,7 +55,7 @@ async def on_actual_state_message(data):
     state = data['state']
 
     if state == 'start':
-        if imports.election_state in [ElectionStates.ELECTIONS_NOT_STARTED, ElectionStates.DISCONNECTED]:
+        if imports.election_state != ElectionStates.TOKEN_VALID:
             await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
 
     else:
@@ -215,10 +215,10 @@ async def check_waiting_for_tag() -> None:
 if __name__ == '__main__':
     uvicorn.run('main:app', host='127.0.0.1', port=80)
 
-@app.post('/api/election/test_simulate_disconnect')
-async def receive_current_election_state_from_gateway(state: dict) -> None:
-    await change_state_and_send_to_frontend(ElectionStates.DISCONNECTED)
+# @app.post('/api/election/test_simulate_disconnect')
+# async def receive_current_election_state_from_gateway(state: dict) -> None:
+#     await change_state_and_send_to_frontend(ElectionStates.DISCONNECTED)
 
-@app.post('/api/election/test_simulate_valid')
-async def receive_current_election_state_from_gateway(state: dict) -> None:
-    await change_state_and_send_to_frontend(ElectionStates.TOKEN_VALID)
+# @app.post('/api/election/test_simulate_valid')
+# async def receive_current_election_state_from_gateway(state: dict) -> None:
+#     await change_state_and_send_to_frontend(ElectionStates.TOKEN_VALID)
