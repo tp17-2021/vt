@@ -2,6 +2,7 @@ import requests
 import asyncio
 import json
 import os
+from backend.src.frontend_communication import change_state_and_send_to_frontend
 
 import src.imports as imports
 from src.imports import ElectionStates, get_validated_token, sio
@@ -78,7 +79,7 @@ async def send_token_to_gateway(token: str) -> None:
     if r.status_code == 200:
         await change_state_and_send_to_frontend(ElectionStates.TOKEN_VALID)
 
-        imports.__validated_token = token
+        imports.validated_token = token
     else:
         await change_state_and_send_to_frontend(ElectionStates.TOKEN_NOT_VALID)
         await asyncio.sleep(5)

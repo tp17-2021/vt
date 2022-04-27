@@ -25,7 +25,7 @@ from src.gateway_communication import receive_config_from_gateway, send_current_
 
 socket_manager = SocketManager(app=app)
 
-imports.__validated_token = "valid"
+imports.validated_token = "valid"
 election_config = None
 imports.election_state = 'inactive'
 imports.vt_id = None

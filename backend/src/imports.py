@@ -26,7 +26,7 @@ class ElectionStates(object):
 election_state = ElectionStates.ELECTIONS_NOT_STARTED
 
 vt_id = None
-__validated_token = "valid"
+validated_token = "valid"
 registered_printer = False
 
 sio = socketio.AsyncClient(
@@ -39,7 +39,7 @@ sio = socketio.AsyncClient(
 def get_validated_token() -> str:
     """ Getter for validated token """
 
-    return __validated_token
+    return validated_token
 
 
 def set_validated_token(token) -> None:
@@ -50,5 +50,6 @@ def set_validated_token(token) -> None:
     token -- validated token that voter used in NFC reader
 
     """
+    global validated_token
 
-    __validated_token = token
+    validated_token = token

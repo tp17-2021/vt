@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 import src.imports as imports
 from src.imports import ElectionStates, app
 
