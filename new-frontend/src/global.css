@@ -86,3 +86,8 @@ button:focus {
     --green: #00703c;
     --red: #FF0000;
 }
+
+.kioskboard-row-dynamic .kioskboard-key {
+    max-width: 6% !important;
+
+}
