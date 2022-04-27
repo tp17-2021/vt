@@ -29,10 +29,11 @@ export enum ElectionStatus {
 export const electionStatus = writable(ElectionStatus.DISCONNECTED);
 electionStatus.subscribe(status => {
     // if election status changes to beginning state or to one of end states, clear vote store from previous vote
-    if (status === ElectionStatus.TOKEN_VALID || status === ElectionStatus.VOTE_SUCCESS || status === ElectionStatus.VOTE_ERROR) {
+    if (status === ElectionStatus.TOKEN_VALID || status === ElectionStatus.VOTE_SUCCESS || status === ElectionStatus.VOTE_ERROR || status === ElectionStatus.DISCONNECTED) {
         // @ts-ignore
         vote.reset();
     }
+    console.log(`Election status changed to ${status}`);
 });
 
 
@@ -83,6 +84,7 @@ socket.on('changed_election_state', msg => {
         case ElectionStatus.TOKEN_VALID:
         case ElectionStatus.WAITING_FOR_NFC_TAG:
         case ElectionStatus.TOKEN_NOT_VALID:
+        case ElectionStatus.DISCONNECTED:
             electionStatus.set(msg.state);
             break;
         default:

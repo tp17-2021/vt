@@ -54,7 +54,13 @@ async def on_actual_state_message(data):
     print('recieved actual_state!', data)
     state = data['state']
 
-    await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG if(state == 'start') else ElectionStates.ELECTIONS_NOT_STARTED)
+    if state == 'start':
+        if imports.election_state in [ElectionStates.ELECTIONS_NOT_STARTED, ElectionStates.DISCONNECTED]:
+            await change_state_and_send_to_frontend(ElectionStates.WAITING_FOR_NFC_TAG)
+
+    else:
+        await change_state_and_send_to_frontend(ElectionStates.ELECTIONS_NOT_STARTED)
+
     await send_current_election_state_to_gateway()
 
 
@@ -208,3 +214,11 @@ async def check_waiting_for_tag() -> None:
 
 if __name__ == '__main__':
     uvicorn.run('main:app', host='127.0.0.1', port=80)
+
+@app.post('/api/election/test_simulate_disconnect')
+async def receive_current_election_state_from_gateway(state: dict) -> None:
+    await change_state_and_send_to_frontend(ElectionStates.DISCONNECTED)
+
+@app.post('/api/election/test_simulate_valid')
+async def receive_current_election_state_from_gateway(state: dict) -> None:
+    await change_state_and_send_to_frontend(ElectionStates.TOKEN_VALID)

@@ -169,6 +169,11 @@ async def change_state_and_send_to_frontend(new_state: str) -> None:
     Method for changing election state and sending it to client
 
     """
+
+    global imports
+
+    print("new_state", new_state)
+
     # Continue only if state was changed
     if new_state == imports.election_state:
         return
