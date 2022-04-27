@@ -26,7 +26,7 @@ export enum ElectionStatus {
     VOTE_ERROR = "vote_error",
     DISCONNECTED = "disconnected",
 }
-export const electionStatus = writable(ElectionStatus.ELECTIONS_NOT_STARTED);
+export const electionStatus = writable(ElectionStatus.DISCONNECTED);
 electionStatus.subscribe(status => {
     // if election status changes to beginning state or to one of end states, clear vote store from previous vote
     if (status === ElectionStatus.TOKEN_VALID || status === ElectionStatus.VOTE_SUCCESS || status === ElectionStatus.VOTE_ERROR) {

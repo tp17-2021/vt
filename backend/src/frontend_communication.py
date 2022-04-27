@@ -42,7 +42,7 @@
 #     # Does the state exist in enum?
 #     if new_state not in [ ElectionStates.ELECTIONS_NOT_STARTED,ElectionStates.WAITING_FOR_NFC_TAG,
 #                         ElectionStates.TOKEN_VALID, ElectionStates.TOKEN_NOT_VALID, 
-#                         ElectionStates.VOTE_SUCCESS, ElectionStates.VOTE_ERROR ]:
+#                         ElectionStates.VOTE_SUCCESS, ElectionStates.VOTE_ERROR , ElectionStates.DISCONNECTED]:
 #         print('Invalid state - ' + str(new_state))
 #         raise HTTPException(status_code=400, detail='Invalid state - ' + str(new_state))
 
