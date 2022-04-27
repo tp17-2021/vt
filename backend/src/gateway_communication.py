@@ -3,7 +3,7 @@ import requests
 import asyncio
 import json
 import os
-from src.frontend_communication import change_state_and_send_to_frontend
+# from src.frontend_communication import change_state_and_send_to_frontend
 
 import src.imports as imports
 from src.imports import ElectionStates, get_validated_token, sio, app

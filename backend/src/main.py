@@ -16,12 +16,14 @@ from src.utils import get_config
 import src.schemas.votes
 from src.schemas.votes import VotePartial
 
-import src.frontend_communication
-from src.frontend_communication import send_current_election_state_to_frontend, change_state_and_send_to_frontend
+# import src.frontend_communication
+# from src.frontend_communication import send_current_election_state_to_frontend, change_state_and_send_to_frontend
 
 import src.gateway_communication
 from src.gateway_communication import receive_config_from_gateway, send_current_election_state_to_gateway, \
-                                        send_token_to_gateway, send_vote_to_gateway 
+                                        send_token_to_gateway, send_vote_to_gateway, \
+                                        send_current_election_state_to_frontend, \
+                                        change_state_and_send_to_frontend
 
 socket_manager = SocketManager(app=app)
 
@@ -197,7 +199,9 @@ async def check_waiting_for_tag() -> None:
 
     """
     if  'DONT_WAIT_FOR_TOKEN' in os.environ and os.environ['DONT_WAIT_FOR_TOKEN'] == '1' and imports.election_state == ElectionStates.WAITING_FOR_NFC_TAG:
-        await test_token_valid()
+        # await test_token_valid()
+        print('TOFO valid token')
+
 
 if __name__ == '__main__':
     uvicorn.run('main:app', host='127.0.0.1', port=80)
