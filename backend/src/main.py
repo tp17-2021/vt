@@ -1,4 +1,6 @@
 import asyncio
+import signal
+import os
 import sys
 import json
 import time
@@ -42,8 +44,8 @@ def connect():
 # Restart VT beckend on socket disconnect
 @sio.event
 def disconnect():
-    print("I'm disconnected!")
-    sys.exit(2)
+    print("I'm disconnected from G WS!")
+    os.kill(os.getpid(), signal.SIGINT)
 
 @sio.on('actual_state')
 async def on_actual_state_message(data):
