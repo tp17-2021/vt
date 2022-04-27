@@ -2,7 +2,6 @@ from fastapi import HTTPException
 import src.imports as imports
 from src.imports import ElectionStates, app
 
-import src.gateway_communication
 from src.gateway_communication import receive_config_from_gateway
 
 async def send_current_election_state_to_frontend() -> None:
