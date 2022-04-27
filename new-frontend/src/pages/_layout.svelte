@@ -23,6 +23,8 @@
                 $goto(`/${$electionType}/error`);
             } else if (electionStatus === ElectionStatus.VOTE_SUCCESS) {
                 $goto(`/${$electionType}/success`);
+            } else if (electionStatus === ElectionStatus.DISCONNECTED) {
+                $goto(`/disconnected`);
             } else {
                 alert("Unknown voting status: " + electionStatus);
             }
@@ -62,7 +64,7 @@
         flex: 1;
         display: flex;
         flex-direction: column;
-        padding: 0 1rem;
+        padding: 1rem 1rem 0 1rem;
         width: 100%;
         max-width: 768px;
         margin: 0 auto;

@@ -43,8 +43,9 @@ def connect():
 
 # Restart VT beckend on socket disconnect
 @sio.event
-def disconnect():
+async def disconnect():
     print("I'm disconnected from G WS!")
+    await change_state_and_send_to_frontend(ElectionStates.DISCONNECTED)
     os.kill(os.getpid(), signal.SIGINT)
 
 @sio.on('actual_state')

@@ -24,6 +24,7 @@ export enum ElectionStatus {
     TOKEN_NOT_VALID = "token_not_valid",
     VOTE_SUCCESS = "vote_success",
     VOTE_ERROR = "vote_error",
+    DISCONNECTED = "disconnected",
 }
 export const electionStatus = writable(ElectionStatus.ELECTIONS_NOT_STARTED);
 electionStatus.subscribe(status => {

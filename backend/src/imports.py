@@ -22,6 +22,7 @@ class ElectionStates(object):
     TOKEN_NOT_VALID = 'token_not_valid'                 # NFC tag was scanned, but is not valid
     VOTE_SUCCESS = 'vote_success'                       # (Only if TOKEN_VALID) Vote was successfully casted to the gateway
     VOTE_ERROR = 'vote_error'                           # (Only if TOKEN_VALID) There was an error sending the vote to gateway
+    DISCONNECTED = 'disconnected'                       # VT was disconnected from gateway
 
 election_state = ElectionStates.ELECTIONS_NOT_STARTED
 
