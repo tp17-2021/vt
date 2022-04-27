@@ -37,6 +37,12 @@ def connect():
     print("I'm connected! SID", sio.sid)
 
 
+# Restart VT beckend on socket disconnect
+@sio.event
+def disconnect():
+    print("I'm disconnected!")
+    sys.exit(2)
+
 @sio.on('actual_state')
 async def on_actual_state_message(data):
     """ Method for communicating actual election state of VT backend to gateway and frontend """
