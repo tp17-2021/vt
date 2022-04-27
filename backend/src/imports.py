@@ -24,7 +24,7 @@ class ElectionStates(object):
     VOTE_ERROR = 'vote_error'                           # (Only if TOKEN_VALID) There was an error sending the vote to gateway
     DISCONNECTED = 'disconnected'                       # VT was disconnected from gateway
 
-election_state = ElectionStates.ELECTIONS_NOT_STARTED
+election_state = ElectionStates.DISCONNECTED
 
 vt_id = None
 validated_token = "valid"
