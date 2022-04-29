@@ -208,8 +208,8 @@ async def check_waiting_for_tag() -> None:
 
     """
     if  'DONT_WAIT_FOR_TOKEN' in os.environ and os.environ['DONT_WAIT_FOR_TOKEN'] == '1' and imports.election_state == ElectionStates.WAITING_FOR_NFC_TAG:
-        # await test_token_valid()
-        print('TOFO valid token')
+        imports.validated_token = "valid"
+        await change_state_and_send_to_frontend(ElectionStates.TOKEN_VALID)
 
 
 if __name__ == '__main__':
