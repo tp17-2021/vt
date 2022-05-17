@@ -7,19 +7,41 @@ RUN apk add -U gcc g++ bash
 RUN apk add jpeg-dev zlib-dev libjpeg
 RUN apk add --upgrade poppler
 RUN apk add --upgrade poppler-utils
+RUN apk add --upgrade cups-dev
 
 COPY ./requirements.txt ./code/requirements.txt
+COPY ./requirements_test.txt ./code/requirements_test.txt
+
 RUN pip3 install --upgrade pip
 RUN pip3 install --upgrade -r ./code/requirements.txt
-
-COPY ./requirements_test.txt ./code/requirements_test.txt
 RUN pip3 install --upgrade -r ./code/requirements_test.txt
 
 RUN mkdir /secret
 RUN mkdir /idk_data
 
+COPY ./src/printer_driver /code/printer_driver
+
+RUN apk add cups cups-libs cups-client cups-filters openrc
+
+RUN apk add cmake
+RUN apk add make
+
+WORKDIR /code/printer_driver
+
+RUN chmod a+x build.sh
+RUN chmod a+x install.sh
+RUN chmod a+x ./ppd/reg.sh
+
+RUN ./build.sh
+RUN ./install.sh
+RUN ./ppd/reg.sh
+
+RUN rc-service cupsd restart
+
+WORKDIR /code
 COPY ./tests /code/tests
 COPY ./src /code/src
+
 
 
 FROM base as test

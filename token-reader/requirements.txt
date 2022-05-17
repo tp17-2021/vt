@@ -1,13 +1,2 @@
-fastapi>=0.68.0,<0.69.0
-fastapi-utils>=0.2.1,<0.2.2
-pydantic>=1.8.0,<2.0.0
-uvicorn>=0.15.0,<0.16.0
 requests>=2.26.0,<2.26.1
-pymongo
-pytest
-pytest-mock
-pyusb
-libusb
-libusb1
-pytest-asyncio
 hidapi==0.11.0.post2

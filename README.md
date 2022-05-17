@@ -1,5 +1,14 @@
 # Voting Terminal
 
+## Interesting ENVs
+
+_These can be set in `docker-compose.yml`_
+
+| ENV | Purpose |
+| --- | --- |
+| VT_ONLY_DEV | If `==1` Gateway is not erquired |
+| DONT_WAIT_FOR_TOKEN | If `==1` fake valid token is sent automatically if waiting for tag |
+
 
 ## Gateway needs to be running for backend to work correctly
 

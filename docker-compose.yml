@@ -10,23 +10,16 @@ services:
     restart: unless-stopped
     environment:
       - ROOT_PATH=/backend
-      - VOTING_SERVICE_PATH=host.docker.internal:8080/voting-service-api
-      - STATE_VECTOR_PATH=host.docker.internal:8080/statevector
-      - VOTING_PROCESS_MANAGER_HOST=host.docker.internal:8080
-      - VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH=voting-process-manager-api/ws/socket.io
-      - VOTING_PROCESS_MANAGER_PATH=host.docker.internal:8080/voting-process-manager-api
-      - VT_ONLY_DEV=0
-    stdin_open: true # docker run -i
-    tty: true        # docker run -t
+      - VOTING_SERVICE_PATH=http://host.docker.internal:8080/voting-service-api
+      - STATE_VECTOR_PATH=http://host.docker.internal:8080/statevector
 
-  vt:
-    build:
-      context: ./
-      dockerfile: ./frontend/Dockerfile
-    depends_on:
-      - vt-backend
-    ports:
-      - "81:80"
+      - VOTING_PROCESS_MANAGER_HOST=http://host.docker.internal:8080
+      - VOTING_PROCESS_MANAGER_HOST_SOCKET_PATH=voting-process-manager-api/ws/socket.io
+      - VOTING_PROCESS_MANAGER_PATH=http://host.docker.internal:8080/voting-process-manager-api
+
+      - PRINTER_IP_ADDRESS=192.168.0.168
+      - VT_ONLY_DEV=0
+      - DONT_WAIT_FOR_TOKEN=0
 
   token-reader:
     build:
@@ -34,7 +27,20 @@ services:
       dockerfile: ./Dockerfile
     restart: unless-stopped
     devices:
-    - /dev/usb/bus:/dev/usb/bus
+      - /dev/usb/bus:/dev/usb/bus
     privileged: true
     environment:
       - TOKEN_URL=vt-backend/token
+    depends_on:
+      - vt-backend
+
+  vt-frontend:
+    build:
+      context: ./new-frontend
+      dockerfile: ./Dockerfile
+      args:
+        vite_base_path: /frontend
+    depends_on:
+      - vt-backend
+    ports:
+      - 81:80
